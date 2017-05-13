@@ -7,6 +7,7 @@
 #include "logger.h"
 
 int set_selection(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight, char selectedTile);
+int set_selection_rotate(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
 int draw_selection(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
 int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, char selectedTile);
 int draw_boarder();
@@ -80,7 +81,7 @@ int main(int argc, char** args){
 				selectedWidth = selectedWidth <  GAME_WIDTH - 1 ? selectedWidth + 1 : GAME_WIDTH;
 				break;
 			case ' ':
-				set_selection(map, selectedX, selectedY, selectedWidth, selectedHeight, (map[selectedY * GAME_WIDTH + selectedX]+1)%3);
+				set_selection_rotate(map, selectedX, selectedY, selectedWidth, selectedHeight);
 				break;
 			case '	':
 				selectedTile = (selectedTile+1) % 3;
@@ -123,11 +124,14 @@ int main(int argc, char** args){
 			return 1;
 		}
 		fwrite(FILE_HEADER, 6, 1, outfile);
+		printf("%s\n", FILE_HEADER);
 
 		char ver = VERSION;
 		fwrite(&ver, sizeof(char), 1, outfile);
+		printf("%d\n", ver);
 		
 		fwrite(map, sizeof(*map), GAME_WIDTH * GAME_HEIGHT, outfile);
+		printf("%s\n", map);
 		fclose(outfile);
 	}
 	return 0;
@@ -138,6 +142,16 @@ int set_selection(char map[], int selectedX, int selectedY, int selectedWidth, i
 	for(i = 0; i < selectedHeight; i++){
 		for(j = 0; j < selectedWidth; j++){
 			map[((i + selectedY) % GAME_HEIGHT)*GAME_WIDTH+((j + selectedX) % GAME_WIDTH)] = selectedTile;
+		}
+	}
+	return 0;
+}
+
+int set_selection_rotate(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight){
+	int i, j;
+	for(i = 0; i < selectedHeight; i++){
+		for(j = 0; j < selectedWidth; j++){
+			map[((i + selectedY) % GAME_HEIGHT)*GAME_WIDTH+((j + selectedX) % GAME_WIDTH)] = (map[((i + selectedY) % GAME_HEIGHT)*GAME_WIDTH+((j + selectedX) % GAME_WIDTH)]+1) % 3;
 		}
 	}
 	return 0;
