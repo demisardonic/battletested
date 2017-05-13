@@ -6,28 +6,13 @@
 #include "util.h"
 #include "logger.h"
 
-#define GAME_WIDTH 78
-#define GAME_HEIGHT 19
-#define TOP_BAR 0
-#define BOTTOM_BAR_1 22
-#define BOTTOM_BAR_2 23
-#define FLOOR '.'
-#define HALF_COVER ACS_DIAMOND
-#define FULL_COVER ACS_CKBOARD
-#define FILE_HEADER "battle"
-#define BUFFER_SIZE (1<<8)
-#define VERSION 1
-
-#define COLOR_DEFAULT 0
-#define COLOR_PC 1
-#define COLOR_SELECTED 2
-
 int set_selection(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight, char selectedTile);
 int draw_selection(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
 int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, char selectedTile);
 int draw_boarder();
 int draw_map(char map[], int x, int y);
 char* read_map_from_file(const char* path);
+void init_color_pairs();
 
 int main(int argc, char** args){
 	int selectedX = 0;
@@ -35,12 +20,12 @@ int main(int argc, char** args){
 	int selectedWidth = 1;
 	int selectedHeight = 1;
 	int selectedTile = 0;
-
-	char *map;
-
-	map = read_map_from_file("file2.bt");
+	
+	char *map = NULL;
+	if(argc > 1){
+		map = read_map_from_file(args[1]);
+	}
 	if(!map){
-		fprintf(stderr, "Failed to read file: %s\n", "file2.bt");
 		char blank[GAME_HEIGHT * GAME_WIDTH];
 		int i;
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
@@ -48,6 +33,16 @@ int main(int argc, char** args){
 		}
 		map = blank;
 	}
+	// map = read_map_from_file("file2.bt");
+	// if(!map){
+	// 	fprintf(stderr, "Failed to read file: %s\n", "file2.bt");
+	// 	char blank[GAME_HEIGHT * GAME_WIDTH];
+	// 	int i;
+	// 	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
+	// 		blank[i] = 0;
+	// 	}
+	// 	map = blank;
+	// }
 	//init ncurses
 	initscr();
 	start_color();
@@ -268,4 +263,10 @@ char* read_map_from_file(const char* path){
 	}
 
 	return map;
+}
+
+void init_color_pairs(){
+	init_pair(COLOR_DEFAULT, COLOR_BLACK, COLOR_WHITE);
+	init_pair(COLOR_PC, COLOR_RED, COLOR_YELLOW);
+	init_pair(COLOR_SELECTED, COLOR_BLACK, COLOR_BLUE);
 }

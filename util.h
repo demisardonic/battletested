@@ -15,5 +15,9 @@
 #define BUFFER_SIZE (1<<8)
 #define VERSION 1
 
+#define COLOR_DEFAULT 0
+#define COLOR_PC 1
+#define COLOR_SELECTED 2
 
+void init_color_pairs();
 #endif
