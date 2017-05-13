@@ -11,6 +11,9 @@
 #define FLOOR '.'
 #define HALF_COVER ACS_DIAMOND
 #define FULL_COVER ACS_CKBOARD
+#define FILE_HEADER "battle"
+#define BUFFER_SIZE (1<<8)
+#define VERSION 1
 
 
 #endif

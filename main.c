@@ -7,12 +7,15 @@
 #include "logger.h"
 
 int draw_map(char map[]);
+char* read_map_from_file(const char* path);
+
 
 int main(int argc, char** args){
-	char map[GAME_HEIGHT * GAME_WIDTH];
-	int i;
-	for(i = 0; i < GAME_WIDTH*GAME_HEIGHT; i++){
-		map[i] = 2;
+	char *map;
+	map = read_map_from_file("file.bt");
+	if(!map){
+		fprintf(stderr, "Failed to read file\n");
+		return 1;
 	}
 	//init ncurses
 	initscr();
@@ -79,39 +82,45 @@ int draw_map(char map[]){
 			}
 		}
 	}
-	/*
-	for(i = 0; i < GAME_HEIGHT+2; i++){
-		for (j = 0; j < GAME_WIDTH+2; j++){
-			move(i+1,j);
-			if(i == 0 && j == 0){
-				addch(ACS_ULCORNER);
-			}else if(i == 0 && j == GAME_WIDTH+1){
-				addch(ACS_URCORNER);
-			}else if(i == GAME_HEIGHT+1 && j == 0){
-				addch(ACS_LLCORNER);
-			}else if(i == GAME_HEIGHT+1 && j == GAME_WIDTH+1){
-				addch(ACS_LRCORNER);
-			}else if(i == 0 || i == GAME_HEIGHT+1){
-				addch(ACS_HLINE);
-			}else if(j == 0 || j == GAME_WIDTH+1){
-				addch(ACS_VLINE);
-			}else{
-				char val = map[i*GAME_WIDTH+j];
-				if(val == 0){
-					addch(FLOOR);
-				}else if (val == 1){
-					addch(HALF_COVER);
-				}else if(val == 2){
-					addch(FULL_COVER);
-				}else{
-					addch(val);	
-				}
-			}	
-		}
-	}*/
 
 	mvprintw(BOTTOM_BAR_1, 0, "BOTTOM BAR PART 1 BOTTOM BAR PART 1 BOTTOM BAR PART 1 BOTTOM BAR PART 1");
 	mvprintw(BOTTOM_BAR_2, 0, "BOTTOM BAR PART 2 BOTTOM BAR PART 2 BOTTOM BAR PART 2 BOTTOM BAR PART 2");
 	refresh();
 	return 1;
+}
+
+char* read_map_from_file(const char* path){
+	FILE *input = fopen(path, "r");
+	if(!input){
+		fprintf(stderr, "File %s does not exist.\n", path);
+		return NULL;
+	}
+
+ 	char buffer[BUFFER_SIZE];
+	if(fread(buffer, sizeof(char), 6, input) != 6){
+		return NULL;
+	}
+	buffer[6] = '\0';
+
+	if(strcmp(buffer, "battle")){
+		fprintf(stderr, "Header did not match.");
+		return NULL;
+	}
+
+	char version;
+	if(!fread(&version, sizeof(char), 1, input)){
+		fprintf(stderr, "Invalid file.\n");
+		return NULL;
+	}
+
+	static char map[GAME_WIDTH * GAME_HEIGHT];
+	fprintf(stderr, "%d\n",GAME_WIDTH * GAME_HEIGHT );
+	if(version == 1){
+		int i;
+		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
+			fread(&map[i], sizeof(char), 1, input);
+		}
+	}
+
+	return map;
 }
