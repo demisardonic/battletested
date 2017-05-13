@@ -25,7 +25,9 @@ clean:
 none:
 	@echo Compilation Complete
 
-editor:
+editor: .PHONY
 	@echo Compiling Map Editor
 	@gcc $(FLAGS) mapeditor.c -o editor $(LFLAGS)
 	@echo Compiling Complete
+
+.PHONY: 

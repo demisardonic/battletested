@@ -33,17 +33,7 @@ int main(int argc, char** args){
 		}
 		map = blank;
 	}
-	// map = read_map_from_file("file2.bt");
-	// if(!map){
-	// 	fprintf(stderr, "Failed to read file: %s\n", "file2.bt");
-	// 	char blank[GAME_HEIGHT * GAME_WIDTH];
-	// 	int i;
-	// 	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
-	// 		blank[i] = 0;
-	// 	}
-	// 	map = blank;
-	// }
-	//init ncurses
+
 	initscr();
 	start_color();
 	raw();
@@ -81,13 +71,13 @@ int main(int argc, char** args){
 				selectedHeight = selectedHeight > 1 ? selectedHeight - 1 : 1;
 				break;
 			case 'S':
-				selectedHeight = selectedHeight < GAME_HEIGHT - 1 ? selectedHeight + 1 : GAME_HEIGHT - 1;
+				selectedHeight = selectedHeight < GAME_HEIGHT - 1 ? selectedHeight + 1 : GAME_HEIGHT;
 				break;
 			case 'A':
 				selectedWidth = selectedWidth > 1 ? selectedWidth - 1 : 1;
 				break;
 			case 'D':
-				selectedWidth = selectedWidth <  GAME_WIDTH - 1 ? selectedWidth + 1 : GAME_WIDTH - 1;
+				selectedWidth = selectedWidth <  GAME_WIDTH - 1 ? selectedWidth + 1 : GAME_WIDTH;
 				break;
 			case ' ':
 				set_selection(map, selectedX, selectedY, selectedWidth, selectedHeight, (map[selectedY * GAME_WIDTH + selectedX]+1)%3);
