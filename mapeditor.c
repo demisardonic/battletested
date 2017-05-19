@@ -2,32 +2,60 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "util.h"
 #include "logger.h"
 
-int set_selection(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight, char selectedTile);
-int set_selection_rotate(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
-int draw_selection(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
-int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, char selectedTile);
+int set_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile);
+int set_selection_rotate(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
+int draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
+int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile);
 int draw_boarder();
-int draw_map(char map[], int x, int y);
-char* read_map_from_file(const char* path);
+int draw_map(uint8_t map[], int x, int y);
+uint8_t* read_map_from_file(const char* path);
+int save_map_to_file(uint8_t *map, const char* path);
 void init_color_pairs();
 
-int main(int argc, char** args){
+int main(int argc, char** argv){
 	int selectedX = 0;
 	int selectedY = 0;
 	int selectedWidth = 1;
 	int selectedHeight = 1;
 	int selectedTile = 0;
+	char loadPath[BUFFER_SIZE];
+	char savePath[BUFFER_SIZE];
 	
-	char *map = NULL;
+	uint8_t *map = NULL;
 	if(argc > 1){
-		map = read_map_from_file(args[1]);
+		int i;
+		strcpy(savePath, argv[1]);
+		strcpy(loadPath, argv[1]);
+		for(i = 1; i < argc; i++){
+			if(argv[i][0] == '-'){
+				if(!strcmp("--save", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 's')){
+					if(i+1 < argc){
+						strcpy(savePath, argv[i+1]);
+						i++;
+					}else{
+						fprintf(stderr, "Incorrect usage of --load.");
+						return 1;
+					}
+				}else if(!strcmp("--load", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 'l')){
+					if(i+1 < argc){
+						strcpy(loadPath, argv[i+1]);
+						i++;
+					}else{
+						fprintf(stderr, "Incorrect usage of --load.");
+						return 1;
+					}
+				}
+			}
+		}
 	}
+	map = read_map_from_file(loadPath);
 	if(!map){
-		char blank[GAME_HEIGHT * GAME_WIDTH];
+		uint8_t blank[GAME_HEIGHT * GAME_WIDTH];
 		int i;
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
 			blank[i] = 0;
@@ -92,7 +120,7 @@ int main(int argc, char** args){
 			case 'q':
 				exit = 1;
 				break;
-			case 19:
+			case 19: //Ctrl-s save
 				exit = 2;
 				break;
 			default:  
@@ -115,29 +143,12 @@ int main(int argc, char** args){
 	endwin();
 
 	if(exit == 2){
-		char filepath [1024];
-		printf("Enter Save File Path.\n");
-		scanf("%[^\n]", filepath);
-		FILE* outfile = fopen(filepath, "w");
-		if(!outfile){
-			fprintf(stderr, "Could not save file: %s\n", filepath);
-			return 1;
-		}
-		fwrite(FILE_HEADER, 6, 1, outfile);
-		printf("%s\n", FILE_HEADER);
-
-		char ver = VERSION;
-		fwrite(&ver, sizeof(char), 1, outfile);
-		printf("%d\n", ver);
-		
-		fwrite(map, sizeof(*map), GAME_WIDTH * GAME_HEIGHT, outfile);
-		printf("%s\n", map);
-		fclose(outfile);
+		save_map_to_file(map, savePath);
 	}
 	return 0;
 }
 
-int set_selection(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight, char selectedTile){
+int set_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile){
 	int i, j;
 	for(i = 0; i < selectedHeight; i++){
 		for(j = 0; j < selectedWidth; j++){
@@ -147,7 +158,7 @@ int set_selection(char map[], int selectedX, int selectedY, int selectedWidth, i
 	return 0;
 }
 
-int set_selection_rotate(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight){
+int set_selection_rotate(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight){
 	int i, j;
 	for(i = 0; i < selectedHeight; i++){
 		for(j = 0; j < selectedWidth; j++){
@@ -157,13 +168,13 @@ int set_selection_rotate(char map[], int selectedX, int selectedY, int selectedW
 	return 0;
 }
 
-int draw_selection(char map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight){
+int draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight){
 	int i, j;
 	attron(COLOR_PAIR(COLOR_SELECTED));
 	for(i = 0; i < selectedHeight; i++){
 		for(j = 0; j < selectedWidth; j++){
 			move(2+ ((i + selectedY) % GAME_HEIGHT), 1 + ((j + selectedX) % GAME_WIDTH));
-			char val = map[((i + selectedY) % GAME_HEIGHT)*GAME_WIDTH+((j + selectedX) % GAME_WIDTH)];
+			uint8_t val = map[((i + selectedY) % GAME_HEIGHT)*GAME_WIDTH+((j + selectedX) % GAME_WIDTH)];
 			if(val == 0){
 				addch(FLOOR);
 			}else if (val == 1){
@@ -180,7 +191,7 @@ int draw_selection(char map[], int selectedX, int selectedY, int selectedWidth, 
 	return 0;
 }
 
-int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, char selectedTile){
+int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile){
 	mvprintw(BOTTOM_BAR_1, 0, "Current X: %d, Current Y: %d, Current Tile: ", selectedX, selectedY);
 	if(selectedTile == 0){
 		addch(FLOOR);
@@ -214,12 +225,12 @@ int draw_boarder(){
 	return 0;
 }
 
-int draw_map(char map[], int x, int y){
+int draw_map(uint8_t map[], int x, int y){
 	int i, j;
 	for(i = 0; i < GAME_HEIGHT; i++){
 		for (j = 0; j < GAME_WIDTH; j++){
 			move(2+i, 1+j);
-			char val = map[i*GAME_WIDTH+j];
+			uint8_t val = map[i*GAME_WIDTH+j];
 			if(val == 0){
 				addch(FLOOR);
 			}else if (val == 1){
@@ -234,7 +245,7 @@ int draw_map(char map[], int x, int y){
 	return 0;
 }
 
-char* read_map_from_file(const char* path){
+uint8_t* read_map_from_file(const char* path){
 	FILE *input = fopen(path, "r");
 	if(!input){
 		fprintf(stderr, "File %s does not exist.\n", path);
@@ -252,13 +263,13 @@ char* read_map_from_file(const char* path){
 		return NULL;
 	}
 
-	char version;
+	uint8_t version;
 	if(!fread(&version, sizeof(char), 1, input)){
 		fprintf(stderr, "Invalid file.\n");
 		return NULL;
 	}
 
-	static char map[GAME_WIDTH * GAME_HEIGHT];
+	static uint8_t map[GAME_WIDTH * GAME_HEIGHT];
 	if(version == 1){
 		int i;
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
@@ -267,6 +278,22 @@ char* read_map_from_file(const char* path){
 	}
 
 	return map;
+}
+
+int save_map_to_file(uint8_t *map, const char* path){
+	FILE* outfile = fopen(path, "w");
+	if(!outfile){
+		fprintf(stderr, "Could not save file: %s\n", path);
+		return 1;
+	}
+	fwrite(FILE_HEADER, 6, 1, outfile);
+
+	uint8_t ver = VERSION;
+	fwrite(&ver, 1, 1, outfile);
+	
+	fwrite(map, sizeof(*map), GAME_WIDTH * GAME_HEIGHT, outfile);
+	fclose(outfile);
+	return 0;
 }
 
 void init_color_pairs(){
