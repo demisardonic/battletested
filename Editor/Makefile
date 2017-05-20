@@ -2,7 +2,7 @@ FLAGS = -g -Wall -Werror
 LFLAGS = -lncurses
 
 BIN = editor
-OBJS = mapeditor.o
+OBJS = mapeditor.o selection.o
 
 all: $(BIN) none
 

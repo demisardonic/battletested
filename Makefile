@@ -20,14 +20,7 @@ $(BIN):$(OBJS)
 
 clean:
 	@echo Removing generated file
-	@rm -f *.o *.d $(BIN) *~ editor
+	@rm -f *.o *.d $(BIN) *~
 
 none:
 	@echo Compilation Complete
-
-editor: .PHONY
-	@echo Compiling Map Editor
-	@gcc $(FLAGS) mapeditor.c -o editor $(LFLAGS)
-	@echo Compiling Complete
-
-.PHONY: 

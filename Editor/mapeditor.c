@@ -4,21 +4,8 @@
 #include <string.h>
 #include <stdint.h>
 
-#define GAME_WIDTH 78
-#define GAME_HEIGHT 19
-#define TOP_BAR 0
-#define BOTTOM_BAR_1 22
-#define BOTTOM_BAR_2 23
-#define FLOOR '.'
-#define HALF_COVER 'x'
-#define FULL_COVER ACS_CKBOARD
-#define FILE_HEADER "battle"
-#define BUFFER_SIZE (1<<8)
-#define VERSION 1
-
-#define COLOR_DEFAULT 0
-#define COLOR_PC 1
-#define COLOR_SELECTED 2
+#include "selection.h"
+#include "util.h"
 
 int set_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile);
 int set_selection_rotate(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
@@ -47,6 +34,16 @@ int main(int argc, char** argv){
 	
 	//Holds the tile values of the map
 	uint8_t *map = NULL;
+	
+	selection_t clipboard;
+	clipboard.val = NULL;
+	
+	//undo/redo
+	/*
+	selection_t undo[5];
+	uint8_t undoPos = 0;
+	uint8_t undoSize = 0;
+	*/
 	
 	if(argc > 1){
 		int i;
@@ -96,7 +93,6 @@ int main(int argc, char** argv){
 		}
 		map = blank;
 	}
-
 	//NCurses screen initialization
 	initscr();
 	start_color();
@@ -121,8 +117,15 @@ int main(int argc, char** argv){
 		valid = 1;
 		//Pull keyboard input
 		int key = getch();
-		move(0,0);
-		printw("%s", keyname(key));
+		const char* keyLong = keyname(key);
+		
+		if(key == '^'){
+			key = 0;
+		}
+		
+		if(keyLong[0] == '^'){
+			key = '^';
+		}
 		switch(key){
 			case 'w':
 				//Move selection up one index.
@@ -172,26 +175,34 @@ int main(int argc, char** argv){
 				//Quit program without saving
 				exit = 1;
 				break;
-			case 19: //Ctrl-s 
-				//Exit program and save to savePath
-				exit = 2;
+			case '^': //Handles ctrl key input
+				switch(keyLong[1]){
+					case 'S': //Save
+						//Exit program and save to savePath
+						exit = 2;
+						break;
+					case 'Z': //undo
+						valid = 0;
+						break;
+					case 'Y': //redo
+						valid = 0;
+						break;
+					case 'X': //cut
+						updateSelection(&clipboard, map, selectedX, selectedY, selectedWidth, selectedHeight);
+						set_selection(map, selectedX, selectedY, selectedWidth, selectedHeight, 0);
+						break;
+					case 'C': //copy
+						updateSelection(&clipboard, map, selectedX, selectedY, selectedWidth, selectedHeight);
+						break;
+					case 'V': //paste
+						superimposeSelection(&clipboard, map, selectedX, selectedY);
+						break;
+					default:
+						valid = 0;
+						break;
+				}
 				break;
-			case 'z': //undo
-				valid = 0;
-				break;
-			case 'y': //redo
-				valid = 0;
-				break;
-			case 'x': //cut
-				valid = 0;
-				break;
-			case 'c': //copy
-				valid = 0;
-				break;
-			case 'v': //paste
-				valid = 0;
-				break;
-			default:
+			case 0: default:
 				//The key input was not a valid key and thus a new key should be input.
 				valid = 0;
 				break;
@@ -218,6 +229,7 @@ int main(int argc, char** argv){
 	if(exit == 2 && savePath[0] != '\0'){
 		save_map_to_file(map, savePath);
 	}
+	freeSelection(&clipboard);
 	return 0;
 }
 
@@ -357,7 +369,6 @@ uint8_t* read_map_from_file(const char* path){
 			fread(&map[i], sizeof(map[i]), 1, input);
 		}
 	}
-
 	return map;
 }
 
