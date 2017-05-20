@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "selection.h"
 #include "util.h"
@@ -15,7 +16,6 @@ int draw_boarder();
 int draw_map(uint8_t map[], int x, int y);
 uint8_t* read_map_from_file(const char* path);
 int save_map_to_file(uint8_t *map, const char* path);
-void init_color_pairs();
 
 int main(int argc, char** argv){
 	//initial start values for selected tiles
@@ -35,15 +35,10 @@ int main(int argc, char** argv){
 	//Holds the tile values of the map
 	uint8_t *map = NULL;
 	
+	//Clip board contains a rectangle of tiles 
+	//which can by copied and pasted into different locations
 	selection_t clipboard;
 	clipboard.val = NULL;
-	
-	//undo/redo
-	/*
-	selection_t undo[5];
-	uint8_t undoPos = 0;
-	uint8_t undoSize = 0;
-	*/
 	
 	if(argc > 1){
 		int i;
@@ -229,6 +224,7 @@ int main(int argc, char** argv){
 	if(exit == 2 && savePath[0] != '\0'){
 		save_map_to_file(map, savePath);
 	}
+	
 	freeSelection(&clipboard);
 	return 0;
 }
@@ -389,8 +385,3 @@ int save_map_to_file(uint8_t *map, const char* path){
 	return 0;
 }
 
-//Creates the color pairs which are used
-void init_color_pairs(){
-	init_pair(COLOR_DEFAULT, COLOR_BLACK, COLOR_WHITE);
-	init_pair(COLOR_SELECTED, COLOR_WHITE, COLOR_RED);
-}

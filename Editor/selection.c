@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "selection.h"
@@ -19,9 +18,7 @@ void updateSelection(selection_t *sel, uint8_t* map, int x, int y, int width, in
 	sel->y = y;
 	sel->width = width;
 	sel->height = height;
-	if(sel->val){
-		free(sel->val);
-	}
+	freeSelection(sel);
 	sel->val = malloc(width*height);
 	int row, col;
 	for(row = 0; row < height; row++){
@@ -32,5 +29,8 @@ void updateSelection(selection_t *sel, uint8_t* map, int x, int y, int width, in
 }
 
 void freeSelection(selection_t* sel){
-	free(sel->val);
+	if(sel->val){
+		free(sel->val);
+		sel->val = NULL;
+	}
 }

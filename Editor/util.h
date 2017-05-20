@@ -17,4 +17,6 @@
 #define COLOR_PC 1
 #define COLOR_SELECTED 2
 
+void init_color_pairs();
+
 #endif
