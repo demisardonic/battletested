@@ -14,6 +14,8 @@ int draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidt
 int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile);
 int draw_boarder();
 int draw_map(uint8_t map[], int x, int y);
+void ui_prompt(const char *pre, char *input);
+void ui_message(const char *message, ...);
 uint8_t* read_map_from_file(const char* path);
 int save_map_to_file(uint8_t *map, const char* path);
 
@@ -184,8 +186,7 @@ int main(int argc, char** argv){
 						int index = 0;
 						int escape = 0;
 						curs_set(1);
-						mvprintw(0, 0, LINE_CLEAR);
-						mvprintw(0, 0, "Save: ");
+						ui_message("Save: ");
 						textKey = getch();
 						while(textKey != '\n'){
 							if(is_path_char(textKey)){
@@ -196,8 +197,7 @@ int main(int argc, char** argv){
 							}else if(textKey == KEY_BACKSPACE){
 								index--;
 								tempPath[index] = '\0';
-								mvprintw(0, 0, LINE_CLEAR);
-								mvprintw(0, 0, "Save: %s", tempPath);
+								ui_message("Save: %s", tempPath);
 							}else if(textKey == 27){
 								escape = 1;
 								curs_set(0);
@@ -214,10 +214,12 @@ int main(int argc, char** argv){
 							}
 							
 							if(!save_map_to_file(map, tempPath)){
-								mvprintw(0, 0, "Saved to %s.", tempPath);
+								ui_message("Saved to %s.", tempPath);
 							}else{
-								mvprintw(0, 0, "Failed to save to %s", tempPath);
+								ui_message("Failed to save to %s", tempPath);
 							}
+						}else{
+							ui_message(NULL);
 						}
 						curs_set(0);
 						break;
@@ -240,8 +242,7 @@ int main(int argc, char** argv){
 							}else if(textKey == KEY_BACKSPACE){
 								index--;
 								tempPath[index] = '\0';
-								mvprintw(0, 0, LINE_CLEAR);
-								mvprintw(0, 0, "Open: %s", tempPath);
+								ui_message("Open: %s", tempPath);
 							}else if(textKey == 27){
 								escape = 1;
 								curs_set(0);
@@ -258,12 +259,14 @@ int main(int argc, char** argv){
 							}
 							tmpMap = read_map_from_file(tempPath);
 							if(tmpMap){
-								mvprintw(0, 0, "Opened %s", tempPath);
+								ui_message("Opened %s", tempPath);
 								map = tmpMap;
 								strcpy(loadPath, tempPath);
 							}else{
-								mvprintw(0, 0, "Failed to opened %s", tempPath);
+								ui_message("Failed to opened %s", tempPath);
 							}
+						}else{
+							ui_message(NULL);
 						}
 						curs_set(0);
 						break;
@@ -283,6 +286,9 @@ int main(int argc, char** argv){
 						break;
 					case 'V': //paste
 						superimposeSelection(&clipboard, map, selectedX, selectedY);
+						break;
+					case 'Q':
+						exit = 1;
 						break;
 					default:
 						valid = 0;
@@ -305,7 +311,6 @@ int main(int argc, char** argv){
 
 		//Draw updated map and info tab
 		draw_map(map, selectedX, selectedY);
-		mvprintw(0, 0, LINE_CLEAR);
 		draw_info(selectedX, selectedY, selectedWidth, selectedHeight, selectedTile);
 		draw_selection(map, selectedX, selectedY, selectedWidth, selectedHeight);
 		refresh();
@@ -425,6 +430,51 @@ int draw_map(uint8_t map[], int x, int y){
 		}
 	}
 	return 0;
+}
+
+void ui_prompt(const char *pre, char *input){
+	int textKey;
+	int index = 0;
+	int escape = 0;
+	curs_set(1);
+	mvprintw(0, 0, LINE_CLEAR);
+	mvprintw(0, 0, "%s", pre);
+	textKey = getch();
+	while(textKey != '\n'){
+		if(is_path_char(textKey)){
+			addch(textKey);
+			input[index] = textKey;
+			index++;
+			input[index] = '\0';
+		}else if(textKey == KEY_BACKSPACE){
+			index--;
+			input[index] = '\0';
+			mvprintw(0, 0, LINE_CLEAR);
+			mvprintw(0, 0, "Open: %s", input);
+		}else if(textKey == 27){
+			escape = 1;
+			curs_set(0);
+			input[0] = '\0';
+			break;
+		}
+		textKey = getch();
+	}
+	if(!escape){
+		if(index == 0){
+			input[0] = '\0';
+		}else{
+			input[index] = '\0';
+		}
+	}
+	curs_set(0);
+}
+
+void ui_message(const char *fmt, ...){
+	va_list args;
+	va_start(args, fmt);
+	mvprintw(0, 0, LINE_CLEAR);
+	mvprintw(0, 0, fmt, args);
+	va_end(args);
 }
 
 //Output map array generated from reading the given file path
