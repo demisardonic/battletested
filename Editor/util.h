@@ -12,11 +12,13 @@
 #define FILE_HEADER "battle"
 #define BUFFER_SIZE (1<<8)
 #define VERSION 1
+#define LINE_CLEAR "                                                                                "
 
 #define COLOR_DEFAULT 0
 #define COLOR_PC 1
 #define COLOR_SELECTED 2
 
 void init_color_pairs();
-
+int is_alphanumeric_char(char);
+int is_path_char(char);
 #endif

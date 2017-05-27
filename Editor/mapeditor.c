@@ -24,29 +24,35 @@ int main(int argc, char** argv){
 	int selectedWidth = 1;
 	int selectedHeight = 1;
 	int selectedTile = 0;
-	
+
+	//Holds the tile values of the map
+	uint8_t *map = NULL;
+	uint8_t *tmpMap = NULL;
+
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
 	char loadPath[BUFFER_SIZE];
 	char savePath[BUFFER_SIZE];
-	loadPath[0] = '\0';
-	savePath[0] = '\0';
+	char tempPath[BUFFER_SIZE];
 	
-	//Holds the tile values of the map
-	uint8_t *map = NULL;
-	
+	int i;
+	for(i = 0; i < BUFFER_SIZE; i++){
+		loadPath[i] = '\0';
+		savePath[i] = '\0';
+		tempPath[i] = '\0';
+	}
+
 	//Clip board contains a rectangle of tiles 
 	//which can by copied and pasted into different locations
 	selection_t clipboard;
 	clipboard.val = NULL;
-	
+
 	if(argc > 1){
 		int i;
-		strcpy(savePath, argv[1]);
-		strcpy(loadPath, argv[1]);
+		//strcpy(savePath, argv[1]);
+		//strcpy(loadPath, argv[1]);
 		for(i = 1; i < argc; i++){
 			if(argv[i][0] == '-'){
-				
 				if(!strcmp("--save", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 's')){ //Save argument
 					if(i+1 < argc){
 						strcpy(savePath, argv[i+1]);
@@ -103,7 +109,7 @@ int main(int argc, char** argv){
 	draw_info(selectedX, selectedY, selectedWidth, selectedHeight, selectedTile);
 	draw_selection(map, selectedX, selectedY, selectedWidth, selectedHeight);
 	refresh();
-	
+
 	//Valid key means a new input can be parsed.
 	int valid;
 	//Exit means input should no longer be read and program will close after key is handled
@@ -172,10 +178,96 @@ int main(int argc, char** argv){
 				break;
 			case '^': //Handles ctrl key input
 				switch(keyLong[1]){
-					case 'S': //Save
-						//Exit program and save to savePath
-						exit = 2;
+					case 'S': //save
+					{
+						int textKey;
+						int index = 0;
+						int escape = 0;
+						curs_set(1);
+						mvprintw(0, 0, LINE_CLEAR);
+						mvprintw(0, 0, "Save: ");
+						textKey = getch();
+						while(textKey != '\n'){
+							if(is_path_char(textKey)){
+								addch(textKey);
+								tempPath[index] = textKey;
+								index++;
+								tempPath[index] = '\0';
+							}else if(textKey == KEY_BACKSPACE){
+								index--;
+								tempPath[index] = '\0';
+								mvprintw(0, 0, LINE_CLEAR);
+								mvprintw(0, 0, "Save: %s", tempPath);
+							}else if(textKey == 27){
+								escape = 1;
+								curs_set(0);
+								tempPath[0] = '\0';
+								break;
+							}
+							textKey = getch();
+						}
+						if(!escape){
+							if(index == 0){
+								strcpy(tempPath, savePath);
+							}else{
+								tempPath[index] = '\0';
+							}
+							
+							if(!save_map_to_file(map, tempPath)){
+								mvprintw(0, 0, "Saved to %s.", tempPath);
+							}else{
+								mvprintw(0, 0, "Failed to save to %s", tempPath);
+							}
+						}
+						curs_set(0);
 						break;
+					}
+					case 'O': //open
+					{
+						int textKey;
+						int index = 0;
+						int escape = 0;
+						curs_set(1);
+						mvprintw(0, 0, LINE_CLEAR);
+						mvprintw(0, 0, "Open: ");
+						textKey = getch();
+						while(textKey != '\n'){
+							if(is_path_char(textKey)){
+								addch(textKey);
+								tempPath[index] = textKey;
+								index++;
+								tempPath[index] = '\0';
+							}else if(textKey == KEY_BACKSPACE){
+								index--;
+								tempPath[index] = '\0';
+								mvprintw(0, 0, LINE_CLEAR);
+								mvprintw(0, 0, "Open: %s", tempPath);
+							}else if(textKey == 27){
+								escape = 1;
+								curs_set(0);
+								tempPath[0] = '\0';
+								break;
+							}
+							textKey = getch();
+						}
+						if(!escape){
+							if(index == 0){
+								strcpy(tempPath, loadPath);
+							}else{
+								tempPath[index] = '\0';
+							}
+							tmpMap = read_map_from_file(tempPath);
+							if(tmpMap){
+								mvprintw(0, 0, "Opened %s", tempPath);
+								map = tmpMap;
+								strcpy(loadPath, tempPath);
+							}else{
+								mvprintw(0, 0, "Failed to opened %s", tempPath);
+							}
+						}
+						curs_set(0);
+						break;
+					}
 					case 'Z': //undo
 						valid = 0;
 						break;
@@ -210,9 +302,10 @@ int main(int argc, char** argv){
 		if(!valid){
 			continue;
 		}
-		
+
 		//Draw updated map and info tab
 		draw_map(map, selectedX, selectedY);
+		mvprintw(0, 0, LINE_CLEAR);
 		draw_info(selectedX, selectedY, selectedWidth, selectedHeight, selectedTile);
 		draw_selection(map, selectedX, selectedY, selectedWidth, selectedHeight);
 		refresh();
@@ -224,7 +317,7 @@ int main(int argc, char** argv){
 	if(exit == 2 && savePath[0] != '\0'){
 		save_map_to_file(map, savePath);
 	}
-	
+
 	freeSelection(&clipboard);
 	return 0;
 }
@@ -277,6 +370,7 @@ int draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidt
 
 //Print two lines of editor information (current x, y, width, height, and tile)
 int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile){
+	mvprintw(BOTTOM_BAR_1, 0, LINE_CLEAR);
 	mvprintw(BOTTOM_BAR_1, 0, "Current X: %d, Current Y: %d, Current Tile: ", selectedX, selectedY);
 	if(selectedTile == 0){
 		addch(FLOOR);
@@ -287,6 +381,7 @@ int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeigh
 	}else{
 		addch(selectedTile);	
 	}
+	mvprintw(BOTTOM_BAR_2, 0, LINE_CLEAR);
 	mvprintw(BOTTOM_BAR_2, 0, "Current Width: %d, Current Height: %d", selectedWidth, selectedHeight);
 	return 0;
 }
