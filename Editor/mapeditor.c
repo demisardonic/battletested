@@ -5,32 +5,22 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "ui.h"
 #include "selection.h"
 #include "util.h"
 
 int set_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile);
 int set_selection_rotate(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
-int draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight);
-int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile);
-int draw_boarder();
-int draw_map(uint8_t map[], int x, int y);
-void ui_prompt(char *input, const char *fmt, ...);
-void ui_message(const char *fmt, ...);
 int read_map_from_file(const char* path, uint8_t *map);
 int save_map_to_file(uint8_t *map, const char* path);
 
 int main(int argc, char** argv){
 	//initial start values for selected tiles
-	int selectedX = 0;
-	int selectedY = 0;
-	int selectedWidth = 1;
-	int selectedHeight = 1;
-	int selectedTile = 0;
-
-	//Holds the tile values of the map
-	uint8_t *map = NULL;
-	uint8_t *tmpMap = NULL;
-
+	
+	
+	ui_t *ui = init_ui();
+	ui->draw();
+	
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
 	char loadPath[BUFFER_SIZE];
@@ -85,18 +75,15 @@ int main(int argc, char** argv){
 	}
 	//If the loadPath was not changed via commandline arguments.
 	if(loadPath[0] != '\0'){
-		read_map_from_file(loadPath, map);
-	}
-	//If map cannot be read from file or no path is provided initialize blank map.
-	if(!map){
-		uint8_t blank[GAME_HEIGHT * GAME_WIDTH];
-		int i;
-		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
-			blank[i] = 0;
+		if(!read_map_from_file(loadPath, ui->map)){
+			//If map cannot be read from file or no path is provided initialize blank map.
+			int i;
+			for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
+				ui->map[i] = 0;
+			}
 		}
-		map = blank;
-		tmpMap = blank;
 	}
+	
 	//NCurses screen initialization
 	initscr();
 	start_color();
@@ -107,10 +94,7 @@ int main(int argc, char** argv){
 	init_color_pairs();
 
 	//Draw the loaded or blank screen
-	draw_boarder();
-	draw_map(map, selectedX, selectedY);
-	draw_info(selectedX, selectedY, selectedWidth, selectedHeight, selectedTile);
-	draw_selection(map, selectedX, selectedY, selectedWidth, selectedHeight);
+	ui->draw();
 	refresh();
 
 	//Valid key means a new input can be parsed.
@@ -133,47 +117,47 @@ int main(int argc, char** argv){
 		switch(key){
 			case 'w':
 				//Move selection up one index.
-				selectedY = selectedY > 0 ? selectedY - 1 : GAME_HEIGHT - 1;
+				ui->selectedY = ui->selectedY > 0 ? ui->selectedY - 1 : GAME_HEIGHT - 1;
 				break;
 			case 's':
 				//Move selection down one index.
-				selectedY = selectedY < GAME_HEIGHT - 1 ? selectedY + 1 : 0;
+				ui->selectedY = ui->selectedY < GAME_HEIGHT - 1 ? ui->selectedY + 1 : 0;
 				break;
 			case 'a':
 				//Move selection left one index.
-				selectedX = selectedX > 0 ? selectedX - 1 : GAME_WIDTH - 1;
+				ui->selectedX = ui->selectedX > 0 ? ui->selectedX - 1 : GAME_WIDTH - 1;
 				break;
 			case 'd':
 				//Move selection right one index.
-				selectedX = selectedX <  GAME_WIDTH - 1 ? selectedX + 1 : 0;
+				ui->selectedX = ui->selectedX <  GAME_WIDTH - 1 ? ui->selectedX + 1 : 0;
 				break;
 			case 'W':
 				//Make selection one tile larger vertically.
-				selectedHeight = selectedHeight > 1 ? selectedHeight - 1 : 1;
+				ui->selectedHeight = ui->selectedHeight > 1 ? ui->selectedHeight - 1 : 1;
 				break;
 			case 'S':
 				//Make selection one tile smaller vertically.
-				selectedHeight = selectedHeight < GAME_HEIGHT - 1 ? selectedHeight + 1 : GAME_HEIGHT;
+				ui->selectedHeight = ui->selectedHeight < GAME_HEIGHT - 1 ? ui->selectedHeight + 1 : GAME_HEIGHT;
 				break;
 			case 'A':
 				//Make selection one tile smaller horizontally.
-				selectedWidth = selectedWidth > 1 ? selectedWidth - 1 : 1;
+				ui->selectedWidth = ui->selectedWidth > 1 ? ui->selectedWidth - 1 : 1;
 				break;
 			case 'D':
 				//Make selection one tile larger horizontally.
-				selectedWidth = selectedWidth <  GAME_WIDTH - 1 ? selectedWidth + 1 : GAME_WIDTH;
+				ui->selectedWidth = ui->selectedWidth <  GAME_WIDTH - 1 ? ui->selectedWidth + 1 : GAME_WIDTH;
 				break;
 			case ' ': //Space
 				//Rotate every tile within the selection
-				set_selection_rotate(map, selectedX, selectedY, selectedWidth, selectedHeight);
+				set_selection_rotate(ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
 				break;
 			case '	': //Tab
 				//Rotate selected tile
-				selectedTile = (selectedTile+1) % 3;
+				ui->selectedTile = (ui->selectedTile+1) % 3;
 				break;
 			case 'e':
 				//Set every tile within selection to selected tile
-				set_selection(map, selectedX, selectedY, selectedWidth, selectedHeight, selectedTile);
+				set_selection(ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight, ui->selectedTile);
 				break;
 			case 'q':
 				//Quit program without saving
@@ -182,22 +166,20 @@ int main(int argc, char** argv){
 			case '^': //Handles ctrl key input
 				switch(keyLong[1]){
 					case 'S': //save
-						ui_prompt(tempPath, "Save: ");
-						if(!save_map_to_file(map, tempPath)){
-							ui_message("Save success.");
+						ui->prompt(tempPath, "Save: ");
+						if(!save_map_to_file(ui->map, tempPath)){
+							ui->message("Save success.");
 						}else{
-							ui_message("Save failure.");
+							ui->message("Save failure.");
 						}
 						break;
 					case 'O': //open
-						ui_prompt(tempPath, "Open: ");
-						read_map_from_file(tempPath, tmpMap);
-						if(tmpMap){
-							ui_message("Open success.");
-							map = tmpMap;
+						ui->prompt(tempPath, "Open: ");
+						if(!read_map_from_file(tempPath, ui->map)){
+							ui->message("Open success.");
 							strcpy(loadPath, tempPath);
 						}else{
-							ui_message("Open failure.");
+							ui->message("Open failure.");
 						}
 						break;
 					case 'Z': //undo
@@ -207,14 +189,14 @@ int main(int argc, char** argv){
 						valid = 0;
 						break;
 					case 'X': //cut
-						updateSelection(&clipboard, map, selectedX, selectedY, selectedWidth, selectedHeight);
-						set_selection(map, selectedX, selectedY, selectedWidth, selectedHeight, 0);
+						updateSelection(&clipboard, ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
+						set_selection(ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight, 0);
 						break;
 					case 'C': //copy
-						updateSelection(&clipboard, map, selectedX, selectedY, selectedWidth, selectedHeight);
+						updateSelection(&clipboard, ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
 						break;
 					case 'V': //paste
-						superimposeSelection(&clipboard, map, selectedX, selectedY);
+						superimposeSelection(&clipboard, ui->map, ui->selectedX, ui->selectedY);
 						break;
 					case 'Q':
 						exit = 1;
@@ -239,9 +221,7 @@ int main(int argc, char** argv){
 		}
 
 		//Draw updated map and info tab
-		draw_map(map, selectedX, selectedY);
-		draw_info(selectedX, selectedY, selectedWidth, selectedHeight, selectedTile);
-		draw_selection(map, selectedX, selectedY, selectedWidth, selectedHeight);
+		ui->draw();
 		refresh();
 	}
 
@@ -249,10 +229,11 @@ int main(int argc, char** argv){
 	endwin();
 
 	if(exit == 2 && savePath[0] != '\0'){
-		save_map_to_file(map, savePath);
+		save_map_to_file(ui->map, savePath);
 	}
 
 	freeSelection(&clipboard);
+	free_ui(ui);
 	return 0;
 }
 
@@ -278,47 +259,7 @@ int set_selection_rotate(uint8_t map[], int selectedX, int selectedY, int select
 	return 0;
 }
 
-//Draw colored selection box
-int draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight){
-	int i, j;
-	attron(COLOR_PAIR(COLOR_SELECTED));
-	for(i = 0; i < selectedHeight; i++){
-		for(j = 0; j < selectedWidth; j++){
-			move(2+ ((i + selectedY) % GAME_HEIGHT), 1 + ((j + selectedX) % GAME_WIDTH));
-			uint8_t val = map[((i + selectedY) % GAME_HEIGHT)*GAME_WIDTH+((j + selectedX) % GAME_WIDTH)];
-			if(val == 0){
-				addch(FLOOR);
-			}else if (val == 1){
-				addch(HALF_COVER);
-			}else if(val == 2){
-				addch(FULL_COVER);
-			}else{
-				addch(val);	
-			}
 
-		}
-	}
-	attroff(COLOR_PAIR(COLOR_SELECTED));
-	return 0;
-}
-
-//Print two lines of editor information (current x, y, width, height, and tile)
-int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile){
-	mvprintw(BOTTOM_BAR_1, 0, LINE_CLEAR);
-	mvprintw(BOTTOM_BAR_1, 0, "Current X: %d, Current Y: %d, Current Tile: ", selectedX, selectedY);
-	if(selectedTile == 0){
-		addch(FLOOR);
-	}else if (selectedTile == 1){
-		addch(HALF_COVER);
-	}else if(selectedTile == 2){
-		addch(FULL_COVER);
-	}else{
-		addch(selectedTile);	
-	}
-	mvprintw(BOTTOM_BAR_2, 0, LINE_CLEAR);
-	mvprintw(BOTTOM_BAR_2, 0, "Current Width: %d, Current Height: %d", selectedWidth, selectedHeight);
-	return 0;
-}
 
 //Draw decorate boarder around map
 int draw_boarder(){
@@ -340,77 +281,9 @@ int draw_boarder(){
 	return 0;
 }
 
-//Draw entire map
-int draw_map(uint8_t map[], int x, int y){
-	int i, j;
-	for(i = 0; i < GAME_HEIGHT; i++){
-		for (j = 0; j < GAME_WIDTH; j++){
-			move(2+i, 1+j);
-			uint8_t val = map[i*GAME_WIDTH+j];
-			if(val == 0){
-				addch(FLOOR);
-			}else if (val == 1){
-				addch(HALF_COVER);
-			}else if(val == 2){
-				addch(FULL_COVER);
-			}else{
-				addch(val);	
-			}
-		}
-	}
-	return 0;
-}
-
-void ui_prompt(char *input, const char *fmt, ...){
-	int textKey;
-	int index = 0;
-	int escape = 0;
-	curs_set(1);
-	va_list args;
-	va_start(args, fmt);
-	mvprintw(0, 0, LINE_CLEAR);
-	mvprintw(0, 0, fmt, args);
-	va_end(args);
-	textKey = getch();
-	while(textKey != '\n'){
-		if(is_path_char(textKey)){
-			addch(textKey);
-			input[index] = textKey;
-			index++;
-			input[index] = '\0';
-		}else if(textKey == KEY_BACKSPACE){
-			index--;
-			input[index] = '\0';
-			mvprintw(0, 0, LINE_CLEAR);
-			mvprintw(0, 0, "Open: %s", input);
-		}else if(textKey == 27){
-			escape = 1;
-			curs_set(0);
-			input[0] = '\0';
-			break;
-		}
-		textKey = getch();
-	}
-	if(!escape){
-		if(index == 0){
-			input[0] = '\0';
-		}else{
-			input[index] = '\0';
-		}
-	}
-	curs_set(0);
-}
-
-void ui_message(const char *fmt, ...){
-	va_list args;
-	va_start(args, fmt);
-	mvprintw(0, 0, LINE_CLEAR);
-	mvprintw(0, 0, fmt, args);
-	va_end(args);
-}
-
 //Output map array generated from reading the given file path
 int read_map_from_file(const char* path, uint8_t *map){
+	
 	FILE *input = fopen(path, "r");
 	if(!input){
 		fprintf(stderr, "File %s does not exist.\n", path);
@@ -435,9 +308,17 @@ int read_map_from_file(const char* path, uint8_t *map){
 	}
 	
 	if(version == 1){
+		uint8_t tempMap[GAME_HEIGHT * GAME_WIDTH];
 		int i;
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
-			fread(&map[i], sizeof(map[i]), 1, input);
+			if(!fread(&tempMap[i], sizeof(tempMap[i]), 1, input)){
+				return 1;
+			}
+		}
+		//The map is written to after reading the entire map so that
+		//the ui map is not corrupted if only a partial map is read.
+		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
+			map[i] = tempMap[i];
 		}
 	}
 	return 0;
