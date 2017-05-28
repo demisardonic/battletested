@@ -1,0 +1,5 @@
+0-5	BATTLE
+6	version#
+
+Version 1
+7-1488	TileID
