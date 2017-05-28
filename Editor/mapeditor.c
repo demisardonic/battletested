@@ -15,9 +15,7 @@ int read_map_from_file(const char* path, uint8_t *map);
 int save_map_to_file(uint8_t *map, const char* path);
 
 int main(int argc, char** argv){
-	//initial start values for selected tiles
-	
-	
+
 	ui_t *ui = init_ui();
 	ui->draw();
 	
@@ -150,14 +148,6 @@ int main(int argc, char** argv){
 			case ' ': //Space
 				//Rotate every tile within the selection
 				set_selection_rotate(ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
-				break;
-			case '	': //Tab
-				//Rotate selected tile
-				ui->selectedTile = (ui->selectedTile+1) % 3;
-				break;
-			case 'e':
-				//Set every tile within selection to selected tile
-				set_selection(ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight, ui->selectedTile);
 				break;
 			case 'q':
 				//Quit program without saving

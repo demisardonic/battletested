@@ -7,7 +7,7 @@
 ui_t *ui;
 
 //Draw entire map
-static void draw_map(uint8_t map[]){
+void draw_map(uint8_t map[]){
 	int i, j;
 	for(i = 0; i < GAME_HEIGHT; i++){
 		for (j = 0; j < GAME_WIDTH; j++){
@@ -27,7 +27,7 @@ static void draw_map(uint8_t map[]){
 }
 
 //Draw colored selection box
-static void draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight){
+void draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight){
 	int i, j;
 	attron(COLOR_PAIR(COLOR_SELECTED));
 	for(i = 0; i < selectedHeight; i++){
@@ -50,23 +50,14 @@ static void draw_selection(uint8_t map[], int selectedX, int selectedY, int sele
 }
 
 //Print two lines of editor information (current x, y, width, height, and tile)
-static void draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile){
+void draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight){
 	mvprintw(BOTTOM_BAR_1, 0, LINE_CLEAR);
-	mvprintw(BOTTOM_BAR_1, 0, "Current X: %d, Current Y: %d, Current Tile: ", selectedX, selectedY);
-	if(selectedTile == 0){
-		addch(FLOOR);
-	}else if (selectedTile == 1){
-		addch(HALF_COVER);
-	}else if(selectedTile == 2){
-		addch(FULL_COVER);
-	}else{
-		addch(selectedTile);	
-	}
+	mvprintw(BOTTOM_BAR_1, 0, "Current X: %d, Current Y: %d", selectedX, selectedY);
 	mvprintw(BOTTOM_BAR_2, 0, LINE_CLEAR);
 	mvprintw(BOTTOM_BAR_2, 0, "Current Width: %d, Current Height: %d", selectedWidth, selectedHeight);
 }
 
-static void ui_draw(){
+void ui_draw(){
 	attron(COLOR_PAIR(COLOR_DEFAULT));
 	int i, j;
 	for(i = 1; i < GAME_HEIGHT+1; i++){
@@ -85,11 +76,11 @@ static void ui_draw(){
 	
 	draw_map(ui->map);
 	draw_selection(ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
-	draw_info(ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight, ui->selectedTile);
+	draw_info(ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
 	
 }
 
-static void ui_message(const char* fmt, ...){
+void ui_message(const char* fmt, ...){
 	va_list args;
 	va_start(args, fmt);
 	mvprintw(0, 0, LINE_CLEAR);
@@ -97,7 +88,7 @@ static void ui_message(const char* fmt, ...){
 	va_end(args);
 }
 
-static void ui_prompt(char* input, const char* fmt, ...){
+void ui_prompt(char* input, const char* fmt, ...){
 	int textKey;
 	int index = 0;
 	int escape = 0;
@@ -145,7 +136,6 @@ ui_t *init_ui(){
 	ui->selectedY = 0;
 	ui->selectedWidth = 1;
 	ui->selectedHeight = 1;
-	ui->selectedTile = 0;
 	
 	ui->draw = ui_draw;
 	ui->prompt = ui_prompt;

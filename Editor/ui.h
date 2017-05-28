@@ -10,7 +10,6 @@ struct ui{
 	int selectedY;
 	int selectedWidth;
 	int selectedHeight;
-	int selectedTile;
 	
 	void (*draw)();
 	void (*prompt)(char*, const char*, ...);
