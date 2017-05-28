@@ -14,9 +14,9 @@ int draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidt
 int draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile);
 int draw_boarder();
 int draw_map(uint8_t map[], int x, int y);
-void ui_prompt(const char *pre, char *input);
-void ui_message(const char *message, ...);
-uint8_t* read_map_from_file(const char* path);
+void ui_prompt(char *input, const char *fmt, ...);
+void ui_message(const char *fmt, ...);
+int read_map_from_file(const char* path, uint8_t *map);
 int save_map_to_file(uint8_t *map, const char* path);
 
 int main(int argc, char** argv){
@@ -85,7 +85,7 @@ int main(int argc, char** argv){
 	}
 	//If the loadPath was not changed via commandline arguments.
 	if(loadPath[0] != '\0'){
-		map = read_map_from_file(loadPath);
+		read_map_from_file(loadPath, map);
 	}
 	//If map cannot be read from file or no path is provided initialize blank map.
 	if(!map){
@@ -95,6 +95,7 @@ int main(int argc, char** argv){
 			blank[i] = 0;
 		}
 		map = blank;
+		tmpMap = blank;
 	}
 	//NCurses screen initialization
 	initscr();
@@ -181,96 +182,24 @@ int main(int argc, char** argv){
 			case '^': //Handles ctrl key input
 				switch(keyLong[1]){
 					case 'S': //save
-					{
-						int textKey;
-						int index = 0;
-						int escape = 0;
-						curs_set(1);
-						ui_message("Save: ");
-						textKey = getch();
-						while(textKey != '\n'){
-							if(is_path_char(textKey)){
-								addch(textKey);
-								tempPath[index] = textKey;
-								index++;
-								tempPath[index] = '\0';
-							}else if(textKey == KEY_BACKSPACE){
-								index--;
-								tempPath[index] = '\0';
-								ui_message("Save: %s", tempPath);
-							}else if(textKey == 27){
-								escape = 1;
-								curs_set(0);
-								tempPath[0] = '\0';
-								break;
-							}
-							textKey = getch();
-						}
-						if(!escape){
-							if(index == 0){
-								strcpy(tempPath, savePath);
-							}else{
-								tempPath[index] = '\0';
-							}
-							
-							if(!save_map_to_file(map, tempPath)){
-								ui_message("Saved to %s.", tempPath);
-							}else{
-								ui_message("Failed to save to %s", tempPath);
-							}
+						ui_prompt(tempPath, "Save: ");
+						if(!save_map_to_file(map, tempPath)){
+							ui_message("Save success.");
 						}else{
-							ui_message(NULL);
+							ui_message("Save failure.");
 						}
-						curs_set(0);
 						break;
-					}
 					case 'O': //open
-					{
-						int textKey;
-						int index = 0;
-						int escape = 0;
-						curs_set(1);
-						mvprintw(0, 0, LINE_CLEAR);
-						mvprintw(0, 0, "Open: ");
-						textKey = getch();
-						while(textKey != '\n'){
-							if(is_path_char(textKey)){
-								addch(textKey);
-								tempPath[index] = textKey;
-								index++;
-								tempPath[index] = '\0';
-							}else if(textKey == KEY_BACKSPACE){
-								index--;
-								tempPath[index] = '\0';
-								ui_message("Open: %s", tempPath);
-							}else if(textKey == 27){
-								escape = 1;
-								curs_set(0);
-								tempPath[0] = '\0';
-								break;
-							}
-							textKey = getch();
-						}
-						if(!escape){
-							if(index == 0){
-								strcpy(tempPath, loadPath);
-							}else{
-								tempPath[index] = '\0';
-							}
-							tmpMap = read_map_from_file(tempPath);
-							if(tmpMap){
-								ui_message("Opened %s", tempPath);
-								map = tmpMap;
-								strcpy(loadPath, tempPath);
-							}else{
-								ui_message("Failed to opened %s", tempPath);
-							}
+						ui_prompt(tempPath, "Open: ");
+						read_map_from_file(tempPath, tmpMap);
+						if(tmpMap){
+							ui_message("Open success.");
+							map = tmpMap;
+							strcpy(loadPath, tempPath);
 						}else{
-							ui_message(NULL);
+							ui_message("Open failure.");
 						}
-						curs_set(0);
 						break;
-					}
 					case 'Z': //undo
 						valid = 0;
 						break;
@@ -432,13 +361,16 @@ int draw_map(uint8_t map[], int x, int y){
 	return 0;
 }
 
-void ui_prompt(const char *pre, char *input){
+void ui_prompt(char *input, const char *fmt, ...){
 	int textKey;
 	int index = 0;
 	int escape = 0;
 	curs_set(1);
+	va_list args;
+	va_start(args, fmt);
 	mvprintw(0, 0, LINE_CLEAR);
-	mvprintw(0, 0, "%s", pre);
+	mvprintw(0, 0, fmt, args);
+	va_end(args);
 	textKey = getch();
 	while(textKey != '\n'){
 		if(is_path_char(textKey)){
@@ -478,31 +410,29 @@ void ui_message(const char *fmt, ...){
 }
 
 //Output map array generated from reading the given file path
-uint8_t* read_map_from_file(const char* path){
+int read_map_from_file(const char* path, uint8_t *map){
 	FILE *input = fopen(path, "r");
 	if(!input){
 		fprintf(stderr, "File %s does not exist.\n", path);
-		return NULL;
+		return 1;
 	}
 
  	char buffer[BUFFER_SIZE];
 	if(fread(buffer, sizeof(char), 6, input) != 6){
-		return NULL;
+		return 1;
 	}
 	buffer[6] = '\0';
 
 	if(strcmp(buffer, "battle")){
 		fprintf(stderr, "Header did not match.");
-		return NULL;
+		return 1;
 	}
 
 	uint8_t version;
 	if(!fread(&version, sizeof(char), 1, input)){
 		fprintf(stderr, "Invalid file.\n");
-		return NULL;
+		return 1;
 	}
-
-	static uint8_t map[GAME_WIDTH * GAME_HEIGHT];
 	
 	if(version == 1){
 		int i;
@@ -510,7 +440,7 @@ uint8_t* read_map_from_file(const char* path){
 			fread(&map[i], sizeof(map[i]), 1, input);
 		}
 	}
-	return map;
+	return 0;
 }
 
 //Save the map array to file
