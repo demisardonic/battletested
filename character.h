@@ -10,6 +10,7 @@ typedef struct character{
 	char c;
 	int color;
 	uint8_t *movement_map;
+	int moves;
 	
 } character_t;
 

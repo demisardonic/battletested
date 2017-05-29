@@ -8,32 +8,11 @@
 
 model_t *model;
 
-int pc_move_left(){
+int pc_move(int y, int x){
 	if(!model){
 		return 1;
 	}
-	return move_character(model->map, model->player, model->player->y, model->player->x-1);
-}
-
-int pc_move_right(){
-	if(!model){
-		return 1;
-	}
-	return move_character(model->map, model->player, model->player->y, model->player->x+1);
-}
-
-int pc_move_up(){
-	if(!model){
-		return 1;
-	}
-	return move_character(model->map, model->player, model->player->y-1, model->player->x);
-}
-
-int pc_move_down(){
-	if(!model){
-		return 1;
-	}
-	return move_character(model->map, model->player, model->player->y+1, model->player->x);
+	return move_character(model->map, model->player, y, x);
 }
 
 model_t *init_model(){
@@ -41,8 +20,8 @@ model_t *init_model(){
 		fprintf(stderr, "Model already initialized.\n");
 		return model;
 	}
-	model = malloc(sizeof(model_t));
-	model->map = malloc(GAME_HEIGHT * GAME_WIDTH);
+	model = (model_t *)malloc(sizeof(model_t));
+	model->map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
 	model->player = init_character();
 	model->player->c = '@';
 	model->player->color = COLOR_PC;

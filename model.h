@@ -9,12 +9,11 @@ typedef struct model model_t;
 struct model{
 	uint8_t *map;
 	character_t *player;
+	int selY;
+	int selX;
 };
 
-int pc_move_left();
-int pc_move_right();
-int pc_move_up();
-int pc_move_down();
+int pc_move(int y, int x);
 
 model_t *init_model();
 void free_model(model_t*);

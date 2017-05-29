@@ -8,53 +8,64 @@
 
 ui_t *ui;
 
+static void draw_char(int y, int x, uint8_t val){
+	move(2+y, 1+x);
+	if(val == 0){
+		addch(FLOOR);
+	}else if (val == 1){
+		addch(HALF_COVER);
+	}else if(val == 2){
+		addch(FULL_COVER);
+	}else{
+		addch(val);	
+	}
+}
+
+static void draw_char_color(int y, int x, uint8_t val, int color){
+	attron(COLOR_PAIR(color));
+	move(2+y, 1+x);
+	if(val == 0){
+		addch(FLOOR);
+	}else if (val == 1){
+		addch(HALF_COVER);
+	}else if(val == 2){
+		addch(FULL_COVER);
+	}else{
+		addch(val);	
+	}
+	attroff(COLOR_PAIR(color));
+}
+
 //Draw entire map
 static void draw_map(uint8_t map[]){
 	attron(COLOR_PAIR(COLOR_DEFAULT));
 	int i, j;
 	for(i = 0; i < GAME_HEIGHT; i++){
 		for (j = 0; j < GAME_WIDTH; j++){
-			move(2+i, 1+j);
-			uint8_t val = map[i*GAME_WIDTH+j];
-			if(val == 0){
-				addch(FLOOR);
-			}else if (val == 1){
-				addch(HALF_COVER);
-			}else if(val == 2){
-				addch(FULL_COVER);
-			}else{
-				addch(val);	
-			}
+			draw_char(i,j,map[i*GAME_WIDTH+j]);
 		}
 	}
 	attroff(COLOR_PAIR(COLOR_DEFAULT));
 }
 
 static void draw_player(character_t *pc){
-	attron(COLOR_PAIR(pc->color));
-	mvaddch(pc->y+2, pc->x+1, pc->c);
-	attroff(COLOR_PAIR(pc->color));
+	draw_char_color(pc->y, pc->x, pc->c, pc->color);
 }
 
 static void draw_player_move(uint8_t *map, character_t *player){
 	int i;
-	attron(COLOR_PAIR(COLOR_MOVE));
 	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
 		if(player->movement_map[i] > 0){
-			move(2+(i/GAME_WIDTH), 1+(i%GAME_WIDTH));
-			uint8_t val = map[i];
-			if(val == 0){
-				addch(FLOOR);
-			}else if (val == 1){
-				addch(HALF_COVER);
-			}else if(val == 2){
-				addch(FULL_COVER);
-			}else{
-				addch(val);	
+			if(player->movement_map[i]<=player->speed && player->moves > 1){
+				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, map[i], COLOR_DMOVE);
+			} else {
+				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, map[i], COLOR_MOVE);
 			}
 		}
 	}
-	attroff(COLOR_PAIR(COLOR_MOVE));
+	attron(COLOR_PAIR(COLOR_PC));
+	draw_char(ui->model->selY, ui->model->selX, map[ui->model->selY * GAME_WIDTH + ui->model->selX]);
+	attroff(COLOR_PAIR(COLOR_PC));
 }
 
 static void ui_draw(){
@@ -128,7 +139,7 @@ static void ui_prompt(char* input, const char* fmt, ...){
 }
 
 ui_t *init_ui(const model_t *model){
-	ui = malloc(sizeof(ui_t));
+	ui = (ui_t *)malloc(sizeof(ui_t));
 	ui->model = model;
 	
 	ui->draw = ui_draw;

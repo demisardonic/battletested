@@ -66,14 +66,13 @@ int main(int argc, char** argv){
 	ui->draw();
 	refresh();
 
-	//Number of valid moves which can be made. -1 is infinite
-	int moves = -1;
 	//invalid key means a new input can be parsed.
 	int invalid;
 	//Exit means input should no longer be read and program will close after key is handled
 	int exit = 0;
+	model->selY = model->player->y;
+	model->selX = model->player->x;
 	while(1){
-		mvprintw(0, 0, "%d", moves);
 		refresh();
 		invalid = 0;
 		//Pull keyboard input
@@ -83,25 +82,35 @@ int main(int argc, char** argv){
 		if(key == '^'){
 			key = 0;
 		}
-		
 		if(keyLong[0] == '^'){
 			key = '^';
 		}
-		
+		mvprintw(0, 0, "%d", model->player->moves);
 		switch(key){
 			case 'w':
-				invalid = pc_move_up();
+				if(model->player->movement_map[yx_to_index(model->selY-1, model->selX)]){
+					model->selY--;
+				}
 				break;
 			case 's':
-				invalid = pc_move_down();
+				if(model->player->movement_map[yx_to_index(model->selY+1, model->selX)]){
+					model->selY++;
+				}
 				break;
 			case 'a':
-				invalid = pc_move_left();
+				if(model->player->movement_map[yx_to_index(model->selY, model->selX-1)]){
+					model->selX--;
+				}
 				break;
 			case 'd':
-				invalid = pc_move_right();
+				if(model->player->movement_map[yx_to_index(model->selY, model->selX+1)]){
+					model->selX++;
+				}
 				break;
-			case ' ': //Space
+			case ' ':
+				pc_move(model->selY, model->selX);
+				model->selY = model->player->y;
+				model->selX = model->player->x;
 				break;
 			case 'q':
 				//Quit program without saving
@@ -122,14 +131,13 @@ int main(int argc, char** argv){
 				invalid = 1;
 				break;
 		}
-		//break from input gathering while loop
 		
 		//Read new input
 		if(invalid){
 			continue;
 		}
-		moves--;
-		if(exit || moves == 0){
+		//break from input gathering while loop
+		if(exit){
 			break;
 		}
 		//Draw updated map and info tab
