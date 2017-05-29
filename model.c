@@ -54,6 +54,6 @@ void free_model(model_t* model){
 		fprintf(stderr, "Model has not been initialized.\n");
 	}
 	free(model->map);
-	free(model->player);
+	free_character(model->player);
 	free(model);
 }
