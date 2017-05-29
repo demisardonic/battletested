@@ -5,8 +5,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "ui.h"
+#include "model.h"
 #include "selection.h"
+#include "ui.h"
 #include "util.h"
 
 int set_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight, uint8_t selectedTile);
@@ -16,7 +17,9 @@ int save_map_to_file(uint8_t *map, const char* path);
 
 int main(int argc, char** argv){
 
-	ui_t *ui = init_ui();
+	model_t *model = init_model();
+
+	ui_t *ui = init_ui(model);
 	ui->draw();
 	
 	//character arrays to store load and save paths.
@@ -59,25 +62,17 @@ int main(int argc, char** argv){
 						fprintf(stderr, "Incorrect usage of --load.");
 						return 1;
 					}
-				}else if(!strcmp("--version", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 'v')){ //Version argument
-					if(i+1 < argc){
-						strcpy(loadPath, argv[i+1]);
-						i++;
-					}else{
-						fprintf(stderr, "Incorrect usage of --version.");
-						return 1;
-					}
 				}
 			}
 		}
 	}
 	//If the loadPath was not changed via commandline arguments.
 	if(loadPath[0] != '\0'){
-		if(!read_map_from_file(loadPath, ui->map)){
+		if(!read_map_from_file(loadPath, model->map)){
 			//If map cannot be read from file or no path is provided initialize blank map.
 			int i;
 			for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
-				ui->map[i] = 0;
+				model->map[i] = 0;
 			}
 		}
 	}
@@ -115,39 +110,39 @@ int main(int argc, char** argv){
 		switch(key){
 			case 'w':
 				//Move selection up one index.
-				ui->selectedY = ui->selectedY > 0 ? ui->selectedY - 1 : GAME_HEIGHT - 1;
+				model->selectedY = model->selectedY > 0 ? model->selectedY - 1 : GAME_HEIGHT - 1;
 				break;
 			case 's':
 				//Move selection down one index.
-				ui->selectedY = ui->selectedY < GAME_HEIGHT - 1 ? ui->selectedY + 1 : 0;
+				model->selectedY = model->selectedY < GAME_HEIGHT - 1 ? model->selectedY + 1 : 0;
 				break;
 			case 'a':
 				//Move selection left one index.
-				ui->selectedX = ui->selectedX > 0 ? ui->selectedX - 1 : GAME_WIDTH - 1;
+				model->selectedX = model->selectedX > 0 ? model->selectedX - 1 : GAME_WIDTH - 1;
 				break;
 			case 'd':
 				//Move selection right one index.
-				ui->selectedX = ui->selectedX <  GAME_WIDTH - 1 ? ui->selectedX + 1 : 0;
+				model->selectedX = model->selectedX <  GAME_WIDTH - 1 ? model->selectedX + 1 : 0;
 				break;
 			case 'W':
 				//Make selection one tile larger vertically.
-				ui->selectedHeight = ui->selectedHeight > 1 ? ui->selectedHeight - 1 : 1;
+				model->selectedHeight = model->selectedHeight > 1 ? model->selectedHeight - 1 : 1;
 				break;
 			case 'S':
 				//Make selection one tile smaller vertically.
-				ui->selectedHeight = ui->selectedHeight < GAME_HEIGHT - 1 ? ui->selectedHeight + 1 : GAME_HEIGHT;
+				model->selectedHeight = model->selectedHeight < GAME_HEIGHT - 1 ? model->selectedHeight + 1 : GAME_HEIGHT;
 				break;
 			case 'A':
 				//Make selection one tile smaller horizontally.
-				ui->selectedWidth = ui->selectedWidth > 1 ? ui->selectedWidth - 1 : 1;
+				model->selectedWidth = model->selectedWidth > 1 ? model->selectedWidth - 1 : 1;
 				break;
 			case 'D':
 				//Make selection one tile larger horizontally.
-				ui->selectedWidth = ui->selectedWidth <  GAME_WIDTH - 1 ? ui->selectedWidth + 1 : GAME_WIDTH;
+				model->selectedWidth = model->selectedWidth <  GAME_WIDTH - 1 ? model->selectedWidth + 1 : GAME_WIDTH;
 				break;
 			case ' ': //Space
 				//Rotate every tile within the selection
-				set_selection_rotate(ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
+				set_selection_rotate(model->map, model->selectedX, model->selectedY, model->selectedWidth, model->selectedHeight);
 				break;
 			case 'q':
 				//Quit program without saving
@@ -157,15 +152,16 @@ int main(int argc, char** argv){
 				switch(keyLong[1]){
 					case 'S': //save
 						ui->prompt(tempPath, "Save: ");
-						if(!save_map_to_file(ui->map, tempPath)){
+						if(!save_map_to_file(model->map, tempPath)){
 							ui->message("Save success.");
+							strcpy(savePath, tempPath);
 						}else{
 							ui->message("Save failure.");
 						}
 						break;
 					case 'O': //open
 						ui->prompt(tempPath, "Open: ");
-						if(!read_map_from_file(tempPath, ui->map)){
+						if(!read_map_from_file(tempPath, model->map)){
 							ui->message("Open success.");
 							strcpy(loadPath, tempPath);
 						}else{
@@ -179,14 +175,14 @@ int main(int argc, char** argv){
 						valid = 0;
 						break;
 					case 'X': //cut
-						updateSelection(&clipboard, ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
-						set_selection(ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight, 0);
+						updateSelection(&clipboard, model->map, model->selectedX, model->selectedY, model->selectedWidth, model->selectedHeight);
+						set_selection(model->map, model->selectedX, model->selectedY, model->selectedWidth, model->selectedHeight, 0);
 						break;
 					case 'C': //copy
-						updateSelection(&clipboard, ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
+						updateSelection(&clipboard, model->map, model->selectedX, model->selectedY, model->selectedWidth, model->selectedHeight);
 						break;
 					case 'V': //paste
-						superimposeSelection(&clipboard, ui->map, ui->selectedX, ui->selectedY);
+						superimposeSelection(&clipboard, model->map, model->selectedX, model->selectedY);
 						break;
 					case 'Q':
 						exit = 1;
@@ -218,12 +214,9 @@ int main(int argc, char** argv){
 	//delete ncurses window
 	endwin();
 
-	if(exit == 2 && savePath[0] != '\0'){
-		save_map_to_file(ui->map, savePath);
-	}
-
 	freeSelection(&clipboard);
 	free_ui(ui);
+	free_model(model);
 	return 0;
 }
 

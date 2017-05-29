@@ -74,9 +74,9 @@ void ui_draw(){
 	mvaddch(GAME_HEIGHT+1+1,GAME_WIDTH+1, ACS_LRCORNER);
 	attroff(COLOR_PAIR(COLOR_DEFAULT));
 	
-	draw_map(ui->map);
-	draw_selection(ui->map, ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
-	draw_info(ui->selectedX, ui->selectedY, ui->selectedWidth, ui->selectedHeight);
+	draw_map(ui->model->map);
+	draw_selection(ui->model->map, ui->model->selectedX, ui->model->selectedY, ui->model->selectedWidth, ui->model->selectedHeight);
+	draw_info(ui->model->selectedX, ui->model->selectedY, ui->model->selectedWidth, ui->model->selectedHeight);
 	
 }
 
@@ -128,14 +128,9 @@ void ui_prompt(char* input, const char* fmt, ...){
 	curs_set(0);
 }
 
-ui_t *init_ui(){
+ui_t *init_ui(const model_t *model){
 	ui = malloc(sizeof(ui_t));
-	ui->map = malloc(GAME_HEIGHT * GAME_WIDTH);
-	
-	ui->selectedX = 0;
-	ui->selectedY = 0;
-	ui->selectedWidth = 1;
-	ui->selectedHeight = 1;
+	ui->model = model;
 	
 	ui->draw = ui_draw;
 	ui->prompt = ui_prompt;
@@ -144,7 +139,6 @@ ui_t *init_ui(){
 }
 
 void free_ui(ui_t* ui){
-	free(ui->map);
 	free(ui);
 }
 
