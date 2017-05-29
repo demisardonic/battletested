@@ -37,3 +37,8 @@ int is_path_char(char val){
 int yx_to_index(int y, int x){
 	return y * GAME_WIDTH + x;
 }
+
+void index_to_yx(int index, int *y, int *x){
+	*y = index/GAME_WIDTH;
+	*x = index%GAME_WIDTH;
+}

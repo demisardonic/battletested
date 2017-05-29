@@ -6,12 +6,15 @@
 typedef struct character{
 	int x;
 	int y;
+	int speed;
 	char c;
 	int color;
+	uint8_t *movement_map;
 	
 } character_t;
 
-int move_character(uint8_t *map, character_t *character, int x, int y);
+void update_valid_moves(uint8_t*, character_t*);
+int move_character(uint8_t*, character_t*, int, int);
 
 character_t *init_character();
 void free_character(character_t*);

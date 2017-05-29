@@ -21,13 +21,7 @@ int main(int argc, char** argv){
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
 	char loadPath[BUFFER_SIZE];
-	char savePath[BUFFER_SIZE];
-	
-	int i;
-	for(i = 0; i < BUFFER_SIZE; i++){
-		loadPath[i] = '\0';
-		savePath[i] = '\0';
-	}
+	memset(loadPath, 0, BUFFER_SIZE);
 
 	//Read commandline arguments if they exist
 	if(argc > 1){
@@ -36,15 +30,7 @@ int main(int argc, char** argv){
 		//strcpy(loadPath, argv[1]);
 		for(i = 1; i < argc; i++){
 			if(argv[i][0] == '-'){
-				if(!strcmp("--save", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 's')){ //Save argument
-					if(i+1 < argc){
-						strcpy(savePath, argv[i+1]);
-						i++;
-					}else{
-						fprintf(stderr, "Incorrect usage of --save.");
-						return 1;
-					}
-				}else if(!strcmp("--load", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 'l')){ //Load argument
+				if(!strcmp("--load", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 'l')){ //Load argument
 					if(i+1 < argc){
 						strcpy(loadPath, argv[i+1]);
 						i++;
@@ -74,7 +60,8 @@ int main(int argc, char** argv){
 	curs_set(0);
 	keypad(stdscr, TRUE);
 	init_color_pairs();
-
+	
+	update_valid_moves(model->map, model->player);
 	//Draw the loaded or blank screen
 	ui->draw();
 	refresh();

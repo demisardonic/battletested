@@ -9,7 +9,7 @@
 ui_t *ui;
 
 //Draw entire map
-void draw_map(uint8_t map[]){
+static void draw_map(uint8_t map[]){
 	attron(COLOR_PAIR(COLOR_DEFAULT));
 	int i, j;
 	for(i = 0; i < GAME_HEIGHT; i++){
@@ -30,58 +30,34 @@ void draw_map(uint8_t map[]){
 	attroff(COLOR_PAIR(COLOR_DEFAULT));
 }
 
-void draw_player(character_t *pc){
+static void draw_player(character_t *pc){
 	attron(COLOR_PAIR(pc->color));
 	mvaddch(pc->y+2, pc->x+1, pc->c);
 	attroff(COLOR_PAIR(pc->color));
 }
 
-void draw_player_move_rec(uint8_t *map, uint8_t *done, int initialD, int dist, int y, int x){
-	move(y+2, x+1);
-	uint8_t val = map[yx_to_index(y, x)];
-	if(val == 0){
-		addch(FLOOR);
-	}else if (val == 1){
-		addch(HALF_COVER);
-	}else if(val == 2){
-		addch(FULL_COVER);
-	}else{
-		addch(val);	
-	}
-	done[yx_to_index(y+initialD,x+initialD)] = dist;
-	if(dist > 0){
-		if(y-1 >= 0 && dist > done[yx_to_index(y-1, x)] && !map[yx_to_index(y-1, x)]){
-			draw_player_move_rec(map, done, initialD, dist-1, y-1, x);
-		}
-		if(y+1 < GAME_HEIGHT && dist > done[yx_to_index(y+1, x)] && !map[yx_to_index(y+1, x)]){
-			draw_player_move_rec(map, done, initialD, dist-1, y+1, x);
-		}
-		if(x-1 >= 0 && dist > done[yx_to_index(y, x-1)] && !map[yx_to_index(y, x-1)]){
-			draw_player_move_rec(map, done, initialD, dist-1, y, x-1);
-		}
-		if(x+1 < GAME_WIDTH && dist > done[yx_to_index(y, x+1)] && !map[yx_to_index(y, x+1)]){
-			draw_player_move_rec(map, done, initialD, dist-1, y, x+1);
-		}
-	}
-}
-
-void draw_player_move(uint8_t *map, character_t *player){
-	int distance = 5;
-	uint8_t done[GAME_HEIGHT * GAME_WIDTH];
+static void draw_player_move(uint8_t *map, character_t *player){
 	int i;
-	int pX = ui->model->player->x;
-	int pY = ui->model->player->y;
-	
-	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
-		done[i] = 0;
-	}
 	attron(COLOR_PAIR(COLOR_MOVE));
-	draw_player_move_rec(map, done, distance, distance, pY, pX);
+	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
+		if(player->movement_map[i] > 0){
+			move(2+(i/GAME_WIDTH), 1+(i%GAME_WIDTH));
+			uint8_t val = map[i];
+			if(val == 0){
+				addch(FLOOR);
+			}else if (val == 1){
+				addch(HALF_COVER);
+			}else if(val == 2){
+				addch(FULL_COVER);
+			}else{
+				addch(val);	
+			}
+		}
+	}
 	attroff(COLOR_PAIR(COLOR_MOVE));
-	
 }
 
-void ui_draw(){
+static void ui_draw(){
 	attron(COLOR_PAIR(COLOR_DEFAULT));
 	int i, j;
 	for(i = 1; i < GAME_HEIGHT+1; i++){
@@ -103,7 +79,7 @@ void ui_draw(){
 	draw_player(ui->model->player);
 }
 
-void ui_message(const char* fmt, ...){
+static void ui_message(const char* fmt, ...){
 	va_list args;
 	va_start(args, fmt);
 	mvprintw(0, 0, LINE_CLEAR);
@@ -111,7 +87,7 @@ void ui_message(const char* fmt, ...){
 	va_end(args);
 }
 
-void ui_prompt(char* input, const char* fmt, ...){
+static void ui_prompt(char* input, const char* fmt, ...){
 	int textKey;
 	int index = 0;
 	int escape = 0;
