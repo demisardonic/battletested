@@ -16,6 +16,7 @@
 
 #define COLOR_DEFAULT 1
 #define COLOR_PC 2
+#define COLOR_MOVE 3
 
 
 void init_color_pairs();

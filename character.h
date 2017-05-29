@@ -13,4 +13,7 @@ typedef struct character{
 
 int move_character(uint8_t *map, character_t *character, int x, int y);
 
+character_t *init_character();
+void free_character(character_t*);
+
 #endif

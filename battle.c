@@ -79,7 +79,8 @@ int main(int argc, char** argv){
 	ui->draw();
 	refresh();
 
-	int moves = 2;
+	//Number of valid moves which can be made. -1 is infinite
+	int moves = -1;
 	//invalid key means a new input can be parsed.
 	int invalid;
 	//Exit means input should no longer be read and program will close after key is handled
@@ -141,7 +142,7 @@ int main(int argc, char** argv){
 			continue;
 		}
 		moves--;
-		if(exit || moves < 1){
+		if(exit || moves == 0){
 			break;
 		}
 		//Draw updated map and info tab

@@ -3,7 +3,6 @@
 #include "character.h"
 #include "util.h"
 
-//Returns the cost of the move
 int move_character(uint8_t *map, character_t *character, int y, int x){
 	if(!character){
 		return 1;

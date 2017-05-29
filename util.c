@@ -9,6 +9,7 @@ void init_color_pairs(){
 	}
 	init_pair(COLOR_DEFAULT, COLOR_WHITE, COLOR_BLACK);
 	init_pair(COLOR_PC, COLOR_WHITE, COLOR_RED);
+	init_pair(COLOR_MOVE, COLOR_WHITE, COLOR_GREEN);
 }
 
 //Returns 1 if the character is alphanumeric

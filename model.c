@@ -44,8 +44,8 @@ model_t *init_model(){
 	model = malloc(sizeof(model_t));
 	model->map = malloc(GAME_HEIGHT * GAME_WIDTH);
 	model->player = malloc(sizeof(character_t));
-	model->player->x = 0;
-	model->player->y = 0;
+	model->player->x = 1;
+	model->player->y = 1;
 	model->player->c = '@';
 	model->player->color = COLOR_PC;
 	return model;
