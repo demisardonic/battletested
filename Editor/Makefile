@@ -2,7 +2,7 @@ FLAGS = -g -Wall -Werror
 LFLAGS = -lncurses
 
 BIN = editor
-OBJS = mapeditor.o model.o selection.o util.o ui.o
+OBJS = mapeditor.o model.o selection.o util.o ui.o 
 
 all: $(BIN) none
 
@@ -18,7 +18,7 @@ $(BIN):$(OBJS)
 
 clean:
 	@echo Removing generated file
-	@rm -f *.o *.d $(BIN) *~
+	@rm -f *.o *.d $(BIN) $(EBIN) *~
 
 none:
 	@echo Compilation Complete

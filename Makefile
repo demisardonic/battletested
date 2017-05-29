@@ -2,11 +2,11 @@ FLAGS = -g -Wall -Werror
 LFLAGS = -lncurses
 
 BIN = battle
-OBJS = main.o logger.o util.o
-
-
+OBJS = battle.o character.o model.o util.o ui.o
 
 all: $(BIN) none
+
+editor: $(EBIN) mon
 
 $(BIN):$(OBJS)
 	@echo Linking $@
@@ -20,7 +20,7 @@ $(BIN):$(OBJS)
 
 clean:
 	@echo Removing generated file
-	@rm -f *.o *.d $(BIN) *~
+	@rm -f *.o *.d $(BIN) $(EBIN) *~
 
 none:
 	@echo Compilation Complete

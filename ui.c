@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <stdlib.h>
 
+#include "character.h"
 #include "ui.h"
 #include "util.h"
 
@@ -28,35 +29,10 @@ void draw_map(uint8_t map[]){
 	attroff(COLOR_PAIR(COLOR_DEFAULT));
 }
 
-//Draw colored selection box
-void draw_selection(uint8_t map[], int selectedX, int selectedY, int selectedWidth, int selectedHeight){
-	int i, j;
-	attron(COLOR_PAIR(COLOR_SELECTED));
-	for(i = 0; i < selectedHeight; i++){
-		for(j = 0; j < selectedWidth; j++){
-			move(2+ ((i + selectedY) % GAME_HEIGHT), 1 + ((j + selectedX) % GAME_WIDTH));
-			uint8_t val = map[((i + selectedY) % GAME_HEIGHT)*GAME_WIDTH+((j + selectedX) % GAME_WIDTH)];
-			if(val == 0){
-				addch(FLOOR);
-			}else if (val == 1){
-				addch(HALF_COVER);
-			}else if(val == 2){
-				addch(FULL_COVER);
-			}else{
-				addch(val);	
-			}
-
-		}
-	}
-	attroff(COLOR_PAIR(COLOR_SELECTED));
-}
-
-//Print two lines of editor information (current x, y, width, height, and tile)
-void draw_info(int selectedX, int selectedY, int selectedWidth, int selectedHeight){
-	mvprintw(BOTTOM_BAR_1, 0, LINE_CLEAR);
-	mvprintw(BOTTOM_BAR_1, 0, "Current X: %d, Current Y: %d", selectedX, selectedY);
-	mvprintw(BOTTOM_BAR_2, 0, LINE_CLEAR);
-	mvprintw(BOTTOM_BAR_2, 0, "Current Width: %d, Current Height: %d", selectedWidth, selectedHeight);
+void draw_player(character_t *pc){
+	attron(COLOR_PAIR(pc->color));
+	mvaddch(pc->y+2, pc->x+1, pc->c);
+	attroff(COLOR_PAIR(pc->color));
 }
 
 void ui_draw(){
@@ -77,8 +53,7 @@ void ui_draw(){
 	
 	attroff(COLOR_PAIR(COLOR_DEFAULT));
 	draw_map(ui->model->map);
-	draw_selection(ui->model->map, ui->model->selectedX, ui->model->selectedY, ui->model->selectedWidth, ui->model->selectedHeight);
-	draw_info(ui->model->selectedX, ui->model->selectedY, ui->model->selectedWidth, ui->model->selectedHeight);
+	draw_player(ui->model->player);
 	
 }
 

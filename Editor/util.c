@@ -4,7 +4,10 @@
 
 //Creates the color pairs which are used
 void init_color_pairs(){
-	init_pair(COLOR_DEFAULT, COLOR_BLACK, COLOR_WHITE);
+	if(can_change_color()){
+		//init_color(COLOR_RED, 1000, 0, 0);
+	}
+	init_pair(COLOR_DEFAULT, COLOR_WHITE, COLOR_BLACK);
 	init_pair(COLOR_SELECTED, COLOR_WHITE, COLOR_RED);
 }
 

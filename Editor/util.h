@@ -14,8 +14,7 @@
 #define VERSION 1
 #define LINE_CLEAR "                                                                                "
 
-#define COLOR_DEFAULT 0
-#define COLOR_PC 1
+#define COLOR_DEFAULT 1
 #define COLOR_SELECTED 2
 
 void init_color_pairs();
