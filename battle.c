@@ -174,11 +174,17 @@ int main(int argc, char** argv){
 		if(invalid){
 			continue;
 		}
-			
-		if(model->pcs[model->cur_pc]->turns <= 0){
+		int turnless = 0;
+		while(model->pcs[model->cur_pc]->turns <= 0){
 			model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
 			model->selY = model->pcs[model->cur_pc]->y;
 			model->selX = model->pcs[model->cur_pc]->x;
+			turnless++;
+			//If all pcs have no more moves, exit.
+			if(turnless >= model->num_pcs){
+				exit = 1;
+				break;
+			}
 		}
 		
 		//break from input gathering while loop
