@@ -5,15 +5,16 @@
 
 #include "character.h"
 
-typedef struct model model_t;
-struct model{
+typedef struct model{
 	uint8_t *map;
-	character_t *player;
 	int selY;
 	int selX;
-};
+	character_t **pcs;
+	int num_pcs;
+	int cur_pc;
+}model_t;
 
-int pc_move(int y, int x);
+int pc_move(character_t *c, int y, int x);
 
 model_t *init_model();
 void free_model(model_t*);

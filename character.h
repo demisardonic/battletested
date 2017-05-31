@@ -10,8 +10,7 @@ typedef struct character{
 	char c;
 	int color;
 	uint8_t *movement_map;
-	int moves;
-	
+	int turns;
 } character_t;
 
 void update_valid_moves(uint8_t*, character_t*);

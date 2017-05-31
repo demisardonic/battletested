@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "model.h"
 #include "ui.h"
@@ -13,6 +14,7 @@ int read_map_from_file(const char* path, uint8_t *map);
 int save_map_to_file(uint8_t *map, const char* path);
 
 int main(int argc, char** argv){
+	srand(time(NULL));
 
 	model_t *model = init_model();
 
@@ -58,10 +60,12 @@ int main(int argc, char** argv){
 	raw();
 	noecho();
 	curs_set(0);
-	keypad(stdscr, TRUE);
+	//keypad(stdscr, TRUE);
 	init_color_pairs();
-	
-	update_valid_moves(model->map, model->player);
+	int i;
+	for(i = 0; i < model->num_pcs; i++){
+		update_valid_moves(model->map, model->pcs[i]);
+	}
 	//Draw the loaded or blank screen
 	ui->draw();
 	refresh();
@@ -70,8 +74,8 @@ int main(int argc, char** argv){
 	int invalid;
 	//Exit means input should no longer be read and program will close after key is handled
 	int exit = 0;
-	model->selY = model->player->y;
-	model->selX = model->player->x;
+	model->selY = model->pcs[model->cur_pc]->y;
+	model->selX = model->pcs[model->cur_pc]->x;
 	while(1){
 		refresh();
 		invalid = 0;
@@ -85,32 +89,32 @@ int main(int argc, char** argv){
 		if(keyLong[0] == '^'){
 			key = '^';
 		}
-		mvprintw(0, 0, "%d", model->player->moves);
+		
 		switch(key){
 			case 'w':
-				if(model->player->movement_map[yx_to_index(model->selY-1, model->selX)]){
+				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY-1, model->selX)]){
 					model->selY--;
 				}
 				break;
 			case 's':
-				if(model->player->movement_map[yx_to_index(model->selY+1, model->selX)]){
+				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY+1, model->selX)]){
 					model->selY++;
 				}
 				break;
 			case 'a':
-				if(model->player->movement_map[yx_to_index(model->selY, model->selX-1)]){
+				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY, model->selX-1)]){
 					model->selX--;
 				}
 				break;
 			case 'd':
-				if(model->player->movement_map[yx_to_index(model->selY, model->selX+1)]){
+				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY, model->selX+1)]){
 					model->selX++;
 				}
 				break;
 			case ' ':
-				pc_move(model->selY, model->selX);
-				model->selY = model->player->y;
-				model->selX = model->player->x;
+				pc_move(model->pcs[model->cur_pc], model->selY, model->selX);
+				model->selY = model->pcs[model->cur_pc]->y;
+				model->selX = model->pcs[model->cur_pc]->x;
 				break;
 			case 'q':
 				//Quit program without saving
@@ -120,6 +124,11 @@ int main(int argc, char** argv){
 				switch(keyLong[1]){
 					case 'Q':
 						exit = 1;
+						break;
+					case 'I': //ctrl-I and also TAB ('\t')
+						model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
+						model->selY = model->pcs[model->cur_pc]->y;
+						model->selX = model->pcs[model->cur_pc]->x;
 						break;
 					default:
 						invalid = 1;
@@ -155,7 +164,6 @@ int main(int argc, char** argv){
 
 //Output map array generated from reading the given file path
 int read_map_from_file(const char* path, uint8_t *map){
-	
 	FILE *input = fopen(path, "r");
 	if(!input){
 		fprintf(stderr, "File %s does not exist.\n", path);
@@ -175,7 +183,7 @@ int read_map_from_file(const char* path, uint8_t *map){
 	}
 
 	uint8_t version;
-	if(!fread(&version, sizeof(char), 1, input)){
+	if(!fread(&version, sizeof(uint8_t), 1, input)){
 		fprintf(stderr, "Ininvalid file.\n");
 		return 1;
 	}

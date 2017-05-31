@@ -25,10 +25,10 @@ static void update_valid_moves_rec(uint8_t *map, uint8_t *done, int dist, int y,
 
 void update_valid_moves(uint8_t *map, character_t *character){
 	int distance;
-	if(character->moves >= 2){
+	if(character->turns >= 2){
 		distance = (character->speed * 2) + 1;
 	}else{
-		distance = character->speed;
+		distance = character->speed + 1;
 	}
 	memset(character->movement_map, 0, sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
 	update_valid_moves_rec(map, character->movement_map, distance, character->y, character->x);
@@ -55,7 +55,7 @@ int move_character(uint8_t *map, character_t *character, int y, int x){
 	} else{
 		cost = 2;
 	}
-	character->moves -= cost;
+	character->turns -= cost;
 	character->y = y;
 	character->x = x;
 	update_valid_moves(map, character);
@@ -66,12 +66,12 @@ character_t *init_character(uint8_t *map){
 	character_t *ch = (character_t *)malloc(sizeof(character_t));
 	ch->movement_map = (uint8_t *)malloc(sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
 	memset(ch->movement_map, 0, sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
-	ch->x = 0;
-	ch->y = 0;
+	ch->x = rand() % GAME_WIDTH;
+	ch->y = rand() % GAME_HEIGHT;
 	ch->speed = 5;
 	ch->color = COLOR_DEFAULT;
 	ch->c = 'a';
-	ch->moves = 2;
+	ch->turns = 2;
 	return ch;
 }
 
