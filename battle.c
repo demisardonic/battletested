@@ -16,14 +16,12 @@ int save_map_to_file(uint8_t *map, const char* path);
 int main(int argc, char** argv){
 	srand(time(NULL));
 
-	model_t *model = init_model();
-
-	ui_t *ui = init_ui(model);
-	
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
 	char loadPath[BUFFER_SIZE];
 	memset(loadPath, 0, BUFFER_SIZE);
+	
+	uint32_t seed = 0;
 
 	//Read commandline arguments if they exist
 	if(argc > 1){
@@ -34,8 +32,14 @@ int main(int argc, char** argv){
 			if(argv[i][0] == '-'){
 				if(!strcmp("--load", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 'l')){ //Load argument
 					if(i+1 < argc){
-						strcpy(loadPath, argv[i+1]);
-						i++;
+						strcpy(loadPath, argv[++i]);
+					}else{
+						fprintf(stderr, "Incorrect usage of --load.");
+						return 1;
+					}
+				}else if(!strcmp("--seed", argv[i])){ //Load argument
+					if(i+1 < argc){
+						seed = atoi(argv[++i]);
 					}else{
 						fprintf(stderr, "Incorrect usage of --load.");
 						return 1;
@@ -44,6 +48,17 @@ int main(int argc, char** argv){
 			}
 		}
 	}
+	
+	if(seed){
+		srand(seed);
+	}else{
+		srand(time(NULL));
+	}
+	
+	uint8_t *map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
+	model_t *model = init_model();
+	model->map = map;
+	ui_t *ui = init_ui(model);
 	
 	//Attempt to read the map file.
 	if(read_map_from_file(loadPath, model->map)){
@@ -64,8 +79,11 @@ int main(int argc, char** argv){
 	init_color_pairs();
 	int i;
 	for(i = 0; i < model->num_pcs; i++){
-		update_valid_moves(model->map, model->pcs[i]);
+		update_valid_moves(model->char_loc, model->map, model->pcs[i]);
 	}
+	model->selY = model->pcs[model->cur_pc]->y;
+	model->selX = model->pcs[model->cur_pc]->x;
+	
 	//Draw the loaded or blank screen
 	ui->draw();
 	refresh();
@@ -74,8 +92,6 @@ int main(int argc, char** argv){
 	int invalid;
 	//Exit means input should no longer be read and program will close after key is handled
 	int exit = 0;
-	model->selY = model->pcs[model->cur_pc]->y;
-	model->selX = model->pcs[model->cur_pc]->x;
 	while(1){
 		refresh();
 		invalid = 0;

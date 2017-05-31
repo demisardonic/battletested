@@ -48,18 +48,19 @@ static void draw_map(uint8_t map[]){
 	attroff(COLOR_PAIR(COLOR_DEFAULT));
 }
 
-static void draw_player(character_t *pc){
-	draw_char_color(pc->y, pc->x, pc->c, pc->color);
-}
-
 static void draw_player_move(uint8_t *map, character_t *player){
 	int i;
 	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
 		if(player->movement_map[i] > 0){
-			if(player->movement_map[i]<=player->speed){
+			/*if(player->movement_map[i]<=player->speed){
 				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, map[i], COLOR_DMOVE);
 			} else {
 				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, map[i], COLOR_MOVE);
+			}*/
+			if(player->movement_map[i]<=player->speed){
+				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, player->movement_map[i]+'0', COLOR_DMOVE);
+			} else {
+				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, player->movement_map[i]+'0', COLOR_MOVE);
 			}
 		}
 	}
@@ -85,11 +86,20 @@ static void ui_draw(){
 	attroff(COLOR_PAIR(COLOR_DEFAULT));
 	draw_map(ui->model->map);
 	draw_player_move(ui->model->map, ui->model->pcs[ui->model->cur_pc]);
-	//draw_player(ui->model->player);
-	for(i = 0; i < ui->model->num_pcs; i++){
-		draw_player(ui->model->pcs[i]);
+	/*for(i = 0; i < ui->model->num_pcs; i++){
+		character_t *ch = ui->model->pcs[i];
+		if(i == ui->model->cur_pc){
+			draw_char_color(ch->y, ch->x, ch->c, COLOR_PC);
+		}else{
+			draw_char_color(ch->y, ch->x, ch->c, COLOR_DEFAULT);
+		}
+	}*/
+	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
+		character_t *ch = ui->model->char_loc[i];
+		if(ch){
+			draw_char_color(ch->y, ch->x, ch->c, COLOR_PC);
+		}
 	}
-	
 }
 
 static void ui_message(const char* fmt, ...){

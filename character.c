@@ -3,38 +3,34 @@
 #include <string.h>
 
 #include "character.h"
+#include "model.h"
 #include "util.h"
 
-static void update_valid_moves_rec(uint8_t *map, uint8_t *done, int dist, int y, int x){
+static void update_valid_moves_rec(character_t **char_loc, uint8_t *map, uint8_t *done, int dist, int y, int x){
 	done[yx_to_index(y, x)] = dist;
 	if(dist > 0){
-		if(y-1 >= 0 && dist > done[yx_to_index(y-1, x)] && !map[yx_to_index(y-1, x)]){
-			update_valid_moves_rec(map, done, dist-1, y-1, x);
+		if(y-1 >= 0 && dist >= done[yx_to_index(y-1, x)] && !map[yx_to_index(y-1, x)] && !char_loc[yx_to_index(y-1, x)]){
+			update_valid_moves_rec(char_loc, map, done, dist-1, y-1, x);
 		}
-		if(y+1 < GAME_HEIGHT && dist > done[yx_to_index(y+1, x)] && !map[yx_to_index(y+1, x)]){
-			update_valid_moves_rec(map, done, dist-1, y+1, x);
+		if(y+1 < GAME_HEIGHT && dist >= done[yx_to_index(y+1, x)] && !map[yx_to_index(y+1, x)] && !char_loc[yx_to_index(y+1, x)]){
+			update_valid_moves_rec(char_loc, map, done, dist-1, y+1, x);
 		}
-		if(x-1 >= 0 && dist > done[yx_to_index(y, x-1)] && !map[yx_to_index(y, x-1)]){
-			update_valid_moves_rec(map, done, dist-1, y, x-1);
+		if(x-1 >= 0 && dist >= done[yx_to_index(y, x-1)] && !map[yx_to_index(y, x-1)] && !char_loc[yx_to_index(y, x-1)]){
+			update_valid_moves_rec(char_loc, map, done, dist-1, y, x-1);
 		}
-		if(x+1 < GAME_WIDTH && dist > done[yx_to_index(y, x+1)] && !map[yx_to_index(y, x+1)]){
-			update_valid_moves_rec(map, done, dist-1, y, x+1);
+		if(x+1 < GAME_WIDTH && dist >= done[yx_to_index(y, x+1)] && !map[yx_to_index(y, x+1)] && !char_loc[yx_to_index(y, x+1)]){
+			update_valid_moves_rec(char_loc, map, done, dist-1, y, x+1);
 		}
 	}
 }
 
-void update_valid_moves(uint8_t *map, character_t *character){
-	int distance;
-	if(character->turns >= 2){
-		distance = (character->speed * 2) + 1;
-	}else{
-		distance = character->speed + 1;
-	}
+void update_valid_moves(character_t **char_loc, uint8_t *map, character_t *character){
+	int distance = (character->speed * character->turns) + 1;
 	memset(character->movement_map, 0, sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
-	update_valid_moves_rec(map, character->movement_map, distance, character->y, character->x);
+	update_valid_moves_rec(char_loc, map, character->movement_map, distance, character->y, character->x);
 }
 
-int move_character(uint8_t *map, character_t *character, int y, int x){
+int move_character(model_t *model, uint8_t *map, character_t *character, int y, int x){
 	if(!character){
 		return 0;
 	}
@@ -50,15 +46,21 @@ int move_character(uint8_t *map, character_t *character, int y, int x){
 	int cost;
 	if(character->y == y && character->x == x){
 		cost = 0;
+		return cost;
 	} else if(character->movement_map[yx_to_index(y, x)] > character->speed){
 		cost = 1;
 	} else{
 		cost = 2;
 	}
 	character->turns -= cost;
+	model->char_loc[yx_to_index(character->y, character->x)] = NULL;
 	character->y = y;
 	character->x = x;
-	update_valid_moves(map, character);
+	model->char_loc[yx_to_index(character->y, character->x)] = character;
+	int i;
+	for(i = 0; i < model->num_pcs; i++){
+		update_valid_moves(model->char_loc, map, model->pcs[i]);
+	}
 	return cost;
 }
 

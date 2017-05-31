@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#include "model.h"
+struct model;
+
 typedef struct character{
 	int x;
 	int y;
@@ -13,8 +16,8 @@ typedef struct character{
 	int turns;
 } character_t;
 
-void update_valid_moves(uint8_t*, character_t*);
-int move_character(uint8_t*, character_t*, int, int);
+void update_valid_moves(character_t**, uint8_t*, character_t*);
+int move_character(struct model *, uint8_t*, character_t*, int, int);
 
 character_t *init_character();
 void free_character(character_t*);

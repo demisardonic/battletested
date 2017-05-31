@@ -4,17 +4,21 @@
 #include <stdint.h>
 
 #include "character.h"
+#include "util.h"
+
+struct character;
 
 typedef struct model{
 	uint8_t *map;
 	int selY;
 	int selX;
-	character_t **pcs;
+	struct character **pcs;
 	int num_pcs;
 	int cur_pc;
+	struct character *char_loc[GAME_HEIGHT * GAME_WIDTH];
 }model_t;
 
-int pc_move(character_t *c, int y, int x);
+int pc_move(struct character *c, int y, int x);
 
 model_t *init_model();
 void free_model(model_t*);
