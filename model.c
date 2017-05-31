@@ -12,8 +12,9 @@ int pc_move(character_t *c, int y, int x){
 	if(!model){
 		return 0;
 	}
-	return move_character(model, model->map, c, y, x);
+	return move_character(model, c, y, x);
 }
+
 
 model_t *init_model(){
 	if(model){

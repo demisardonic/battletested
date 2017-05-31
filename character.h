@@ -17,7 +17,7 @@ typedef struct character{
 } character_t;
 
 void update_valid_moves(character_t**, uint8_t*, character_t*);
-int move_character(struct model *, uint8_t*, character_t*, int, int);
+int move_character(struct model *, character_t*, int, int);
 
 character_t *init_character();
 void free_character(character_t*);

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <stdio.h>
+
 #include "character.h"
 #include "model.h"
 #include "util.h"
@@ -30,7 +32,7 @@ void update_valid_moves(character_t **char_loc, uint8_t *map, character_t *chara
 	update_valid_moves_rec(char_loc, map, character->movement_map, distance, character->y, character->x);
 }
 
-int move_character(model_t *model, uint8_t *map, character_t *character, int y, int x){
+int move_character(model_t *model, character_t *character, int y, int x){
 	if(!character){
 		return 0;
 	}
@@ -39,7 +41,7 @@ int move_character(model_t *model, uint8_t *map, character_t *character, int y, 
 		return 0;
 	}
 	
-	if(map[yx_to_index(y, x)] != 0){
+	if(model->map[yx_to_index(y, x)] != 0){
 		return 0;
 	}
 	
@@ -47,11 +49,10 @@ int move_character(model_t *model, uint8_t *map, character_t *character, int y, 
 	if(character->y == y && character->x == x){
 		cost = 0;
 		return cost;
-	} else if(character->movement_map[yx_to_index(y, x)] > character->speed){
-		cost = 1;
-	} else{
-		cost = 2;
-	}
+	} 
+	
+	cost = character->turns - ((character->movement_map[yx_to_index(y, x)] - 1) / character->speed);
+		 
 	character->turns -= cost;
 	model->char_loc[yx_to_index(character->y, character->x)] = NULL;
 	character->y = y;
@@ -59,12 +60,12 @@ int move_character(model_t *model, uint8_t *map, character_t *character, int y, 
 	model->char_loc[yx_to_index(character->y, character->x)] = character;
 	int i;
 	for(i = 0; i < model->num_pcs; i++){
-		update_valid_moves(model->char_loc, map, model->pcs[i]);
+		update_valid_moves(model->char_loc, model->map, model->pcs[i]);
 	}
 	return cost;
 }
 
-character_t *init_character(uint8_t *map){
+character_t *init_character(){
 	character_t *ch = (character_t *)malloc(sizeof(character_t));
 	ch->movement_map = (uint8_t *)malloc(sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
 	memset(ch->movement_map, 0, sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);

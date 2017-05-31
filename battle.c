@@ -16,6 +16,7 @@ int save_map_to_file(uint8_t *map, const char* path);
 int main(int argc, char** argv){
 	srand(time(NULL));
 
+	int i;
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
 	char loadPath[BUFFER_SIZE];
@@ -57,6 +58,9 @@ int main(int argc, char** argv){
 	
 	uint8_t *map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
 	model_t *model = init_model();
+	for(i = 0; i < model->num_pcs; i++){
+		printf("%d\n", model->pcs[i]->turns);
+	}printf("\n");
 	model->map = map;
 	ui_t *ui = init_ui(model);
 	
@@ -77,13 +81,11 @@ int main(int argc, char** argv){
 	curs_set(0);
 	//keypad(stdscr, TRUE);
 	init_color_pairs();
-	int i;
 	for(i = 0; i < model->num_pcs; i++){
 		update_valid_moves(model->char_loc, model->map, model->pcs[i]);
 	}
 	model->selY = model->pcs[model->cur_pc]->y;
 	model->selX = model->pcs[model->cur_pc]->x;
-	
 	//Draw the loaded or blank screen
 	ui->draw();
 	refresh();
@@ -93,7 +95,11 @@ int main(int argc, char** argv){
 	//Exit means input should no longer be read and program will close after key is handled
 	int exit = 0;
 	while(1){
+		
+		//Redraw the ui
+		ui->draw();
 		refresh();
+		
 		invalid = 0;
 		//Pull keyboard input
 		int key = getch();
@@ -111,21 +117,25 @@ int main(int argc, char** argv){
 				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY-1, model->selX)]){
 					model->selY--;
 				}
+				invalid = 1;
 				break;
 			case 's':
 				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY+1, model->selX)]){
 					model->selY++;
 				}
+				invalid = 1;
 				break;
 			case 'a':
 				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY, model->selX-1)]){
 					model->selX--;
 				}
+				invalid = 1;
 				break;
 			case 'd':
 				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY, model->selX+1)]){
 					model->selX++;
 				}
+				invalid = 1;
 				break;
 			case ' ':
 				pc_move(model->pcs[model->cur_pc], model->selY, model->selX);
@@ -145,6 +155,7 @@ int main(int argc, char** argv){
 						model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
 						model->selY = model->pcs[model->cur_pc]->y;
 						model->selX = model->pcs[model->cur_pc]->x;
+						invalid = 1;
 						break;
 					default:
 						invalid = 1;
@@ -157,17 +168,24 @@ int main(int argc, char** argv){
 				break;
 		}
 		
+		mvprintw(0,0,"%d\n", model->pcs[model->cur_pc]->turns);
+		
 		//Read new input
 		if(invalid){
 			continue;
 		}
+			
+		if(model->pcs[model->cur_pc]->turns <= 0){
+			model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
+			model->selY = model->pcs[model->cur_pc]->y;
+			model->selX = model->pcs[model->cur_pc]->x;
+		}
+		
 		//break from input gathering while loop
 		if(exit){
 			break;
 		}
-		//Draw updated map and info tab
-		ui->draw();
-		refresh();
+		
 	}
 
 	//delete ncurses window
