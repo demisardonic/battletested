@@ -58,22 +58,18 @@ int main(int argc, char** argv){
 		srand(time(NULL));
 	}
 	
+	//Initialize the model
+	model_t *model = init_model();
+	
+	//Load the players.btp file
 	int num_pc_info = 0;
 	character_info_t **player_info = read_characters_from_file("players.btp", &num_pc_info);
-	uint8_t *map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
-	model_t *model = init_model();
-	model->map = map;
 	model->num_pc_info = num_pc_info;
 	model->pc_info = player_info;
-	model->num_pcs = num_pc_info;
-	model->pcs = (character_t **) malloc(sizeof(character_t *) * model->num_pcs);
-	for(i = 0; i < model->num_pcs; i++){
-		model->pcs[i] = init_character(player_info[i]);
-		model->char_loc[yx_to_index(model->pcs[i]->y, model->pcs[i]->x)] = model->pcs[i];
-	}
-	ui_t *ui = init_ui(model);
 	
-	//Attempt to read the map file.
+	//Attempt to read the map file and store it within the model
+	uint8_t *map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
+	model->map = map;
 	if(read_map_from_file(loadPath, model->map)){
 		//If map cannot be read from file initialize blank map.
 		int i;
@@ -81,6 +77,17 @@ int main(int argc, char** argv){
 			model->map[i] = 0;
 		}
 	}
+	
+	//Create an array of player character pointers stored in the model
+	model->num_pcs = num_pc_info;
+	model->pcs = (character_t **) malloc(sizeof(character_t *) * model->num_pcs);
+	for(i = 0; i < model->num_pcs; i++){
+		model->pcs[i] = init_character(player_info[i]);
+		model->char_loc[yx_to_index(model->pcs[i]->y, model->pcs[i]->x)] = model->pcs[i];
+	}
+	
+	//Create the ui struct and store a read-only model pointer
+	ui_t *ui = init_ui(model);
 	
 	//NCurses screen initialization
 	initscr();
@@ -91,6 +98,7 @@ int main(int argc, char** argv){
 	keypad(stdscr, TRUE);
 	init_color_pairs();
 	
+	//Create the valid move map for every player
 	for(i = 0; i < model->num_pcs; i++){
 		update_valid_moves(model->char_loc, model->map, model->pcs[i]);
 	}
@@ -165,9 +173,7 @@ int main(int argc, char** argv){
 						exit = 1;
 						break;
 					case 'I': //ctrl-I and also TAB ('\t')
-						model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
-						model->moveY = model->pcs[model->cur_pc]->y;
-						model->moveX = model->pcs[model->cur_pc]->x;
+						rotate_cur_pc();
 						invalid = 1;
 						break;
 					default:
@@ -189,9 +195,7 @@ int main(int argc, char** argv){
 		}
 		int turnless = 0;
 		while(model->pcs[model->cur_pc]->turns <= 0){
-			model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
-			model->moveY = model->pcs[model->cur_pc]->y;
-			model->moveX = model->pcs[model->cur_pc]->x;
+			rotate_cur_pc();
 			turnless++;
 			//If all pcs have no more moves, exit.
 			if(turnless >= model->num_pcs){

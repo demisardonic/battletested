@@ -8,6 +8,13 @@
 
 model_t *model;
 
+int rotate_cur_pc(){
+	model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
+	model->moveY = model->pcs[model->cur_pc]->y;
+	model->moveX = model->pcs[model->cur_pc]->x;
+	return model->cur_pc;
+}
+
 int pc_move(character_t *c, int y, int x){
 	if(!model){
 		return 0;

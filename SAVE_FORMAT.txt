@@ -1,9 +1,18 @@
 MAP
-0-5	battle
+0-5	btlmap
 6	version#
 
 Version 1
 7-1488	TileID
 
+
 PLAYERS
-0-5	
+0-5	btlplr
+6	version#
+7	# of player info
+
+Version 1
+4	length of first name
+n	first name
+4	length of last name
+n	last name

@@ -24,6 +24,7 @@ typedef struct model{
 	struct character *char_loc[GAME_HEIGHT * GAME_WIDTH];
 }model_t;
 
+int rotate_cur_pc();
 int pc_move(struct character *c, int y, int x);
 
 model_t *init_model();
