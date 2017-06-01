@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "character.h"
+#include "logger.h"
 #include "model.h"
 #include "ui.h"
 #include "util.h"
@@ -58,19 +59,24 @@ int main(int argc, char** argv){
 		srand(time(NULL));
 	}
 	
+	logger("Initializing model.");
 	//Initialize the model
 	model_t *model = init_model();
 	
 	//Load the players.btp file
 	int num_pc_info = 0;
+	logger("Reading player info.");
 	character_info_t **player_info = read_characters_from_file("players.btp", &num_pc_info);
+	logger("Read %d players.", num_pc_info);
 	model->num_pc_info = num_pc_info;
 	model->pc_info = player_info;
 	
+	logger("Initializing map from \"%s\".", loadPath);
 	//Attempt to read the map file and store it within the model
 	uint8_t *map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
 	model->map = map;
 	if(read_map_from_file(loadPath, model->map)){
+		logger("Failed to read %s, generating blank map. ");
 		//If map cannot be read from file initialize blank map.
 		int i;
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
@@ -78,6 +84,7 @@ int main(int argc, char** argv){
 		}
 	}
 	
+	logger("Initializing pc array.");
 	//Create an array of player character pointers stored in the model
 	model->num_pcs = num_pc_info;
 	model->pcs = (character_t **) malloc(sizeof(character_t *) * model->num_pcs);
@@ -86,9 +93,11 @@ int main(int argc, char** argv){
 		model->char_loc[yx_to_index(model->pcs[i]->y, model->pcs[i]->x)] = model->pcs[i];
 	}
 	
+	logger("Initializing ui.");
 	//Create the ui struct and store a read-only model pointer
 	ui_t *ui = init_ui(model);
 	
+	logger("Initializing ncurses.");
 	//NCurses screen initialization
 	initscr();
 	start_color();

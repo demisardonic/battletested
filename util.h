@@ -19,6 +19,7 @@
 #define COLOR_MOVE 3
 #define COLOR_DMOVE 4
 
+#define LOG_FILE_PATH "btlog"
 
 void init_color_pairs();
 int is_alphanumeric_char(char);

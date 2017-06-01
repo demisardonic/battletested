@@ -2,8 +2,7 @@
 #include <stdarg.h>
 
 #include "logger.h"
-
-#define LOG_FILE_PATH "battletested.log"
+#include "util.h"
 
 int has_init = 0;
 
@@ -16,20 +15,25 @@ static int init_log(){
 		fprintf(stderr, "failed to create log file");
 		return 1;
 	}
-	
-	fprintf(fp, "===============\n");
-	fprintf(fp, "      LOG      \n");
-	fprintf(fp, "===============\n\n");
 
 	fclose(fp);
 	return 0;
 }
+#include <stdio.h>
+#include <stdarg.h>
+#include <time.h>
 
-int logger_log(const char *format, ...){
-	if (!has_init){
+#include "logger.h"
+#include "util.h"
+
+
+int logger(const char *format, ...){
+
+	if(!has_init){
 		init_log();
+		logger("Initializing log.");
 	}
-
+	
 	FILE *fp = fopen(LOG_FILE_PATH, "a");
 	
 	if (!fp)
@@ -37,17 +41,26 @@ int logger_log(const char *format, ...){
 		fprintf(stderr, "failed to open log file\n");
 		return 1;
 	}
-
+	char time_buffer[26];
 	char buffer[255];
 
 	va_list argv;
 	va_start(argv, format);
 	vsprintf(buffer, format, argv);
 	va_end(argv);
+	
+	time_t timer;
+    struct tm* tm_info;
 
-	fprintf(fp, "%s\n", buffer);
+    time(&timer);
+    tm_info = localtime(&timer);
+
+    strftime(time_buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+	
+	fprintf(fp, "[%s] %s\n", time_buffer, buffer);
 
 	fclose(fp);
 	return 0;
 }
+
 

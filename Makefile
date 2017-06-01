@@ -2,7 +2,7 @@ FLAGS = -g -Wall -Werror
 LFLAGS = -lncurses
 
 BIN = battle
-OBJS = battle.o character.o model.o util.o ui.o
+OBJS = battle.o character.o logger.o model.o util.o ui.o
 
 all: $(BIN) none
 
