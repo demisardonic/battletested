@@ -6,17 +6,24 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "character.h"
 #include "model.h"
 #include "ui.h"
 #include "util.h"
 
 int read_map_from_file(const char* path, uint8_t *map);
 int save_map_to_file(uint8_t *map, const char* path);
+character_info_t **read_characters_from_file(const char* path, int *num_char_len);
 
 int main(int argc, char** argv){
 	srand(time(NULL));
-
 	int i;
+	
+	int num_char_len = 0;
+	character_info_t **player_info = read_characters_from_file("players.btp", &num_char_len);
+	
+	
+	
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
 	char loadPath[BUFFER_SIZE];
@@ -58,11 +65,16 @@ int main(int argc, char** argv){
 	
 	uint8_t *map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
 	model_t *model = init_model();
-	for(i = 0; i < model->num_pcs; i++){
-		printf("%d\n", model->pcs[i]->turns);
-	}printf("\n");
 	model->map = map;
+	model->num_pcs = num_char_len;
+	model->pcs = (character_t **) malloc(sizeof(character_t *) * model->num_pcs);
+	for(i = 0; i < model->num_pcs; i++){
+		model->pcs[i] = init_character(player_info[i]);
+		model->char_loc[yx_to_index(model->pcs[i]->y, model->pcs[i]->x)] = model->pcs[i];
+	}
 	ui_t *ui = init_ui(model);
+	
+	free(player_info);
 	
 	//Attempt to read the map file.
 	if(read_map_from_file(loadPath, model->map)){
@@ -79,13 +91,15 @@ int main(int argc, char** argv){
 	raw();
 	noecho();
 	curs_set(0);
-	//keypad(stdscr, TRUE);
+	keypad(stdscr, TRUE);
 	init_color_pairs();
+	
 	for(i = 0; i < model->num_pcs; i++){
 		update_valid_moves(model->char_loc, model->map, model->pcs[i]);
 	}
-	model->selY = model->pcs[model->cur_pc]->y;
-	model->selX = model->pcs[model->cur_pc]->x;
+	model->moveY = model->pcs[model->cur_pc]->y;
+	model->moveX = model->pcs[model->cur_pc]->x;
+	
 	//Draw the loaded or blank screen
 	ui->draw();
 	refresh();
@@ -93,14 +107,16 @@ int main(int argc, char** argv){
 	//invalid key means a new input can be parsed.
 	int invalid;
 	//Exit means input should no longer be read and program will close after key is handled
-	int exit = 0;
+	int exit;
+	
 	while(1){
-		
 		//Redraw the ui
 		ui->draw();
 		refresh();
 		
 		invalid = 0;
+		exit = 0;
+		
 		//Pull keyboard input
 		int key = getch();
 		const char* keyLong = keyname(key);
@@ -114,33 +130,33 @@ int main(int argc, char** argv){
 		
 		switch(key){
 			case 'w':
-				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY-1, model->selX)]){
-					model->selY--;
+				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->moveY-1, model->moveX)]){
+					model->moveY--;
 				}
 				invalid = 1;
 				break;
 			case 's':
-				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY+1, model->selX)]){
-					model->selY++;
+				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->moveY+1, model->moveX)]){
+					model->moveY++;
 				}
 				invalid = 1;
 				break;
 			case 'a':
-				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY, model->selX-1)]){
-					model->selX--;
+				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX-1)]){
+					model->moveX--;
 				}
 				invalid = 1;
 				break;
 			case 'd':
-				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->selY, model->selX+1)]){
-					model->selX++;
+				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX+1)]){
+					model->moveX++;
 				}
 				invalid = 1;
 				break;
 			case ' ':
-				pc_move(model->pcs[model->cur_pc], model->selY, model->selX);
-				model->selY = model->pcs[model->cur_pc]->y;
-				model->selX = model->pcs[model->cur_pc]->x;
+				pc_move(model->pcs[model->cur_pc], model->moveY, model->moveX);
+				model->moveY = model->pcs[model->cur_pc]->y;
+				model->moveX = model->pcs[model->cur_pc]->x;
 				break;
 			case 'q':
 				//Quit program without saving
@@ -153,8 +169,8 @@ int main(int argc, char** argv){
 						break;
 					case 'I': //ctrl-I and also TAB ('\t')
 						model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
-						model->selY = model->pcs[model->cur_pc]->y;
-						model->selX = model->pcs[model->cur_pc]->x;
+						model->moveY = model->pcs[model->cur_pc]->y;
+						model->moveX = model->pcs[model->cur_pc]->x;
 						invalid = 1;
 						break;
 					default:
@@ -177,8 +193,8 @@ int main(int argc, char** argv){
 		int turnless = 0;
 		while(model->pcs[model->cur_pc]->turns <= 0){
 			model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
-			model->selY = model->pcs[model->cur_pc]->y;
-			model->selX = model->pcs[model->cur_pc]->x;
+			model->moveY = model->pcs[model->cur_pc]->y;
+			model->moveX = model->pcs[model->cur_pc]->x;
 			turnless++;
 			//If all pcs have no more moves, exit.
 			if(turnless >= model->num_pcs){
@@ -217,7 +233,7 @@ int read_map_from_file(const char* path, uint8_t *map){
 	}
 	buffer[6] = '\0';
 
-	if(strcmp(buffer, "battle")){
+	if(strcmp(buffer, "btlmap")){
 		fprintf(stderr, "Header did not match.\n");
 		return 1;
 	}
@@ -263,3 +279,76 @@ int save_map_to_file(uint8_t *map, const char* path){
 	return 0;
 }
 
+//Output a character_info array
+character_info_t **read_characters_from_file(const char* path, int *num_char_info){
+	FILE *input = fopen(path, "r");
+	if(!input){
+		fprintf(stderr, "File %s does not exist.\n", path);
+		return NULL;
+	}
+
+ 	char buffer[BUFFER_SIZE];
+	if(fread(buffer, sizeof(char), 6, input) != 6){
+		fprintf(stderr, "Failed to read header.\n");
+		return NULL;
+	}
+	buffer[6] = '\0';
+
+	if(strcmp(buffer, "btlplr")){
+		fprintf(stderr, "Header did not match.\n");
+		return NULL;
+	}
+
+	uint8_t version;
+	if(!fread(&version, sizeof(uint8_t), 1, input)){
+		fprintf(stderr, "Ininvalid file.\n");
+		return NULL;
+	}
+	
+	if(version == 1){
+		
+		if(!fread(num_char_info, sizeof(uint8_t), 1, input)){
+			fprintf(stderr, "No num_char_info.\n");
+			return NULL;
+		}
+		character_info_t **players = (character_info_t **) malloc(sizeof(character_info_t *) * (*num_char_info));
+		int i;
+		int length;
+		for(i = 0; i < *num_char_info; i++){
+			
+			players[i] = (character_info_t *) malloc(sizeof(character_info_t));
+			
+			if(!fread(&length, sizeof(uint32_t), 1, input)){
+				fprintf(stderr, "Failed to read Name Length\n");
+				return NULL;
+			}
+			
+			char *f_name = (char *) malloc(sizeof(char) * (length + 1));
+			
+			if(!fread(f_name, sizeof(char), length, input)){
+				fprintf(stderr, "Failed to read Name Length\n");
+				return NULL;
+			}
+			f_name[length] = '\0';
+			players[i]->f_name = f_name;
+			printf("name: %s\n", players[i]->f_name);
+			
+			if(!fread(&length, sizeof(uint32_t), 1, input)){
+				fprintf(stderr, "Failed to read Name Length\n");
+				return NULL;
+			}
+			
+			char *l_name = (char *) malloc(sizeof(char) * (length + 1));
+			
+			if(!fread(l_name, sizeof(char), length, input)){
+				fprintf(stderr, "Failed to read Name Length\n");
+				return NULL;
+			}
+			l_name[length] = '\0';
+			players[i]->l_name = l_name;
+			printf("name: %s\n", players[i]->l_name);
+		}
+		return players;
+	}
+	return NULL;
+}

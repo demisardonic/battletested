@@ -1,6 +1,5 @@
 #include <ncurses.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "character.h"
 #include "ui.h"
@@ -52,19 +51,18 @@ static void draw_player_move(uint8_t *map, character_t *player){
 	int i;
 	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
 		if(player->movement_map[i] > 0){
-			/*if(player->movement_map[i]<=player->speed){
+			if(player->movement_map[i]<=player->speed){
 				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, map[i], COLOR_DMOVE);
 			} else {
 				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, map[i], COLOR_MOVE);
-			}*/
-			if(player->movement_map[i]<=player->speed){
-				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, player->movement_map[i]+'0', COLOR_DMOVE);
-			} else {
-				draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, player->movement_map[i]+'0', COLOR_MOVE);
 			}
 		}
 	}
-	draw_char_color(ui->model->selY, ui->model->selX, map[ui->model->selY * GAME_WIDTH + ui->model->selX], COLOR_PC);
+	draw_char_color(ui->model->moveY, ui->model->moveX, map[ui->model->moveY * GAME_WIDTH + ui->model->moveX], COLOR_PC);
+}
+static void draw_cur_pc_info(character_t *pc){
+	mvprintw(BOTTOM_BAR_1, 0, LINE_CLEAR);
+	mvprintw(BOTTOM_BAR_1, 0, "Name:%s %s X:%d Y:%d", pc->info->f_name, pc->info->l_name, pc->x, pc->y);
 }
 
 static void ui_draw(){
@@ -86,20 +84,14 @@ static void ui_draw(){
 	attroff(COLOR_PAIR(COLOR_DEFAULT));
 	draw_map(ui->model->map);
 	draw_player_move(ui->model->map, ui->model->pcs[ui->model->cur_pc]);
-	/*for(i = 0; i < ui->model->num_pcs; i++){
-		character_t *ch = ui->model->pcs[i];
-		if(i == ui->model->cur_pc){
-			draw_char_color(ch->y, ch->x, ch->c, COLOR_PC);
-		}else{
-			draw_char_color(ch->y, ch->x, ch->c, COLOR_DEFAULT);
-		}
-	}*/
 	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
 		character_t *ch = ui->model->char_loc[i];
 		if(ch){
-			draw_char_color(ch->y, ch->x, ch->c, COLOR_PC);
+			draw_char_color(ch->y, ch->x, ch->c, COLOR_DEFAULT);
 		}
 	}
+	draw_char_color(ui->model->pcs[ui->model->cur_pc]->y, ui->model->pcs[ui->model->cur_pc]->x, ui->model->pcs[ui->model->cur_pc]->c, COLOR_PC);
+	draw_cur_pc_info(ui->model->pcs[ui->model->cur_pc]);
 }
 
 static void ui_message(const char* fmt, ...){

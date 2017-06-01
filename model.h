@@ -10,8 +10,8 @@ struct character;
 
 typedef struct model{
 	uint8_t *map;
-	int selY;
-	int selX;
+	int moveY;
+	int moveX;
 	struct character **pcs;
 	int num_pcs;
 	int cur_pc;

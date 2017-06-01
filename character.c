@@ -65,7 +65,15 @@ int move_character(model_t *model, character_t *character, int y, int x){
 	return cost;
 }
 
-character_t *init_character(){
+void free_character_info(character_info_t *info){
+	if(info){
+		free(info->f_name);
+		free(info->l_name);
+	}
+	free(info);
+}
+
+character_t *init_character(character_info_t *info){
 	character_t *ch = (character_t *)malloc(sizeof(character_t));
 	ch->movement_map = (uint8_t *)malloc(sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
 	memset(ch->movement_map, 0, sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
@@ -75,10 +83,12 @@ character_t *init_character(){
 	ch->color = COLOR_DEFAULT;
 	ch->c = 'a';
 	ch->turns = 2;
+	ch->info = info;
 	return ch;
 }
 
 void free_character(character_t* c){
 	free(c->movement_map);
+	free_character_info(c->info);
 	free(c);
 }

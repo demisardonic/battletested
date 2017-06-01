@@ -9,7 +9,7 @@
 #define FLOOR '.'
 #define HALF_COVER 'x'
 #define FULL_COVER ACS_CKBOARD
-#define FILE_HEADER "battle"
+#define FILE_HEADER "btlmap"
 #define BUFFER_SIZE (1<<8)
 #define VERSION 1
 #define LINE_CLEAR "                                                                                "

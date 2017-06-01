@@ -1,5 +1,5 @@
 MAP
-0-5	btlmap
+0-5	battle
 6	version#
 
 Version 1
