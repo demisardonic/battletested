@@ -89,6 +89,5 @@ character_t *init_character(character_info_t *info){
 
 void free_character(character_t* c){
 	free(c->movement_map);
-	free_character_info(c->info);
 	free(c);
 }

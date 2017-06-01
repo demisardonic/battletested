@@ -19,11 +19,6 @@ int main(int argc, char** argv){
 	srand(time(NULL));
 	int i;
 	
-	int num_char_len = 0;
-	character_info_t **player_info = read_characters_from_file("players.btp", &num_char_len);
-	
-	
-	
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
 	char loadPath[BUFFER_SIZE];
@@ -63,18 +58,20 @@ int main(int argc, char** argv){
 		srand(time(NULL));
 	}
 	
+	int num_pc_info = 0;
+	character_info_t **player_info = read_characters_from_file("players.btp", &num_pc_info);
 	uint8_t *map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
 	model_t *model = init_model();
 	model->map = map;
-	model->num_pcs = num_char_len;
+	model->num_pc_info = num_pc_info;
+	model->pc_info = player_info;
+	model->num_pcs = num_pc_info;
 	model->pcs = (character_t **) malloc(sizeof(character_t *) * model->num_pcs);
 	for(i = 0; i < model->num_pcs; i++){
 		model->pcs[i] = init_character(player_info[i]);
 		model->char_loc[yx_to_index(model->pcs[i]->y, model->pcs[i]->x)] = model->pcs[i];
 	}
 	ui_t *ui = init_ui(model);
-	
-	free(player_info);
 	
 	//Attempt to read the map file.
 	if(read_map_from_file(loadPath, model->map)){
@@ -331,7 +328,6 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_inf
 			}
 			f_name[length] = '\0';
 			players[i]->f_name = f_name;
-			printf("name: %s\n", players[i]->f_name);
 			
 			if(!fread(&length, sizeof(uint32_t), 1, input)){
 				fprintf(stderr, "Failed to read Name Length\n");
@@ -346,7 +342,8 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_inf
 			}
 			l_name[length] = '\0';
 			players[i]->l_name = l_name;
-			printf("name: %s\n", players[i]->l_name);
+			
+			players[i]->available = 1;
 		}
 		return players;
 	}

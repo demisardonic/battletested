@@ -32,6 +32,11 @@ model_t *init_model(){
 
 void free_model(model_t* model){
 	int i;
+	for(i = 0; i < model->num_pc_info; i++){
+		free_character_info(model->pc_info[i]);
+	}
+	free(model->pc_info);
+	
 	for(i = 0; i < model->num_pcs; i++){
 		free_character(model->pcs[i]);
 	}
