@@ -7,6 +7,7 @@
 
 typedef struct ui {
 	const model_t *model;
+	uint8_t mode;
 	
 	void (*draw)();
 	void (*prompt)(char*, const char*, ...);

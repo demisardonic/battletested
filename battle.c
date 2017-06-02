@@ -19,6 +19,7 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_len
 int main(int argc, char** argv){
 	srand(time(NULL));
 	int i;
+	int curr_squad_size = 0;
 	
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
@@ -29,7 +30,6 @@ int main(int argc, char** argv){
 
 	//Read commandline arguments if they exist
 	if(argc > 1){
-		int i;
 		//strcpy(savePath, argv[1]);
 		//strcpy(loadPath, argv[1]);
 		for(i = 1; i < argc; i++){
@@ -86,16 +86,28 @@ int main(int argc, char** argv){
 	
 	logger("Initializing pc array.");
 	//Create an array of player character pointers stored in the model
-	model->num_pcs = num_pc_info;
-	model->pcs = (character_t **) malloc(sizeof(character_t *) * model->num_pcs);
-	for(i = 0; i < model->num_pcs; i++){
-		model->pcs[i] = init_character(player_info[i]);
-		model->char_loc[yx_to_index(model->pcs[i]->y, model->pcs[i]->x)] = model->pcs[i];
+	model->num_pcs = 0;
+	model->squad = (character_t **) malloc(sizeof(character_t *) * MAX_SQUAD_SIZE);
+	for(i = 0; i < MAX_SQUAD_SIZE; i++){
+		model->squad[i] = NULL;
 	}
+	/*
+	for(i = 0; i < model->num_pcs; i++){
+		model->squad[i] = init_character(player_info[i]);
+		model->char_loc[yx_to_index(model->squad[i]->y, model->squad[i]->x)] = model->squad[i];
+	}
+	//Create the valid move map for every player
+	for(i = 0; i < model->num_pcs; i++){
+		update_valid_moves(model->char_loc, model->map, model->squad[i]);
+	}
+	model->moveY = model->squad[model->cur_pc]->y;
+	model->moveX = model->squad[model->cur_pc]->x;
+	*/
+	
 	
 	logger("Initializing ui.");
 	//Create the ui struct and store a read-only model pointer
-	ui_t *ui = init_ui(model);
+	ui_t *ui = init_ui(model);  
 	
 	logger("Initializing ncurses.");
 	//NCurses screen initialization
@@ -106,13 +118,6 @@ int main(int argc, char** argv){
 	curs_set(0);
 	keypad(stdscr, TRUE);
 	init_color_pairs();
-	
-	//Create the valid move map for every player
-	for(i = 0; i < model->num_pcs; i++){
-		update_valid_moves(model->char_loc, model->map, model->pcs[i]);
-	}
-	model->moveY = model->pcs[model->cur_pc]->y;
-	model->moveX = model->pcs[model->cur_pc]->x;
 	
 	//Draw the loaded or blank screen
 	ui->draw();
@@ -133,62 +138,98 @@ int main(int argc, char** argv){
 		
 		//Pull keyboard input
 		int key = getch();
-		const char* keyLong = keyname(key);
 		
-		if(key == '^'){
-			key = 0;
-		}
-		if(keyLong[0] == '^'){
-			key = '^';
-		}
+		mvprintw(0, 0, "%d", curr_squad_size);
 		
 		switch(key){
+			case 'i':
+				ui->mode = ui->mode == MODE_GAME ? MODE_SELECT_SQUAD : MODE_GAME;
+				clear();
+				break;
 			case 'w':
-				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->moveY-1, model->moveX)]){
-					model->moveY--;
+				if(ui->mode == MODE_GAME){
+					if(model->cur_pc != -1 && model->squad[model->cur_pc]->movement_map[yx_to_index(model->moveY-1, model->moveX)]){
+						model->moveY--;
+					}
+					invalid = 1;
+				} else if(ui->mode == MODE_SELECT_SQUAD){
+					if(model->selection > 0){
+						model->selection--;
+					}
 				}
-				invalid = 1;
 				break;
 			case 's':
-				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->moveY+1, model->moveX)]){
-					model->moveY++;
+				if(ui->mode == MODE_GAME){
+					if(model->cur_pc != -1 && model->squad[model->cur_pc]->movement_map[yx_to_index(model->moveY+1, model->moveX)]){
+						model->moveY++;
+					}
+					invalid = 1;
+				} else if(ui->mode == MODE_SELECT_SQUAD){
+					if(model->selection < model->num_pc_info-1){
+						model->selection++;
+					}
 				}
-				invalid = 1;
 				break;
 			case 'a':
-				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX-1)]){
+				if(model->cur_pc != -1 && model->squad[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX-1)]){
 					model->moveX--;
 				}
 				invalid = 1;
 				break;
 			case 'd':
-				if(model->pcs[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX+1)]){
+				if(model->cur_pc != -1 && model->squad[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX+1)]){
 					model->moveX++;
 				}
 				invalid = 1;
 				break;
 			case ' ':
-				pc_move(model->pcs[model->cur_pc], model->moveY, model->moveX);
-				model->moveY = model->pcs[model->cur_pc]->y;
-				model->moveX = model->pcs[model->cur_pc]->x;
+				if(ui->mode == MODE_GAME){
+					if(model->cur_pc != -1){
+						pc_move(model->squad[model->cur_pc], model->moveY, model->moveX);
+						model->moveY = model->squad[model->cur_pc]->y;
+						model->moveX = model->squad[model->cur_pc]->x;
+					}
+				} else if(ui->mode == MODE_SELECT_SQUAD){
+					if(model->pc_info[model->selection]->in_squad && curr_squad_size > 0){
+						model->pc_info[model->selection]->in_squad = 0;
+						curr_squad_size--;
+					}else if(!model->pc_info[model->selection]->in_squad && curr_squad_size < MAX_SQUAD_SIZE - 1){
+						model->pc_info[model->selection]->in_squad = 1;
+						curr_squad_size++;
+					}
+				}
+				break;
+			case '\n':
+				if(ui->mode == MODE_SELECT_SQUAD){
+					for(i = 0; i < model->num_pcs; i++){
+						free_character(model->squad[i]);
+					}
+					model->num_pcs = 0;
+					model->cur_pc = -1;
+					int count = 0;
+					for(i = 0; i < model->num_pc_info; i++){
+						if(model->pc_info[i]->in_squad){
+							model->squad[count] = init_character(model->pc_info[i]);
+							model->char_loc[yx_to_index(model->squad[count]->y, model->squad[count]->x)] = model->squad[count];
+							update_valid_moves(model->char_loc, model->map, model->squad[count]);
+							model->cur_pc = count;
+							model->moveY = model->squad[model->cur_pc]->y;
+							model->moveX = model->squad[model->cur_pc]->x;
+							model->num_pcs++;
+							count++;
+						}
+					}
+				}
+				break;
+			case '\t':
+				if(model->cur_pc != -1){
+					rotate_cur_pc();
+				}
+				invalid = 1;
 				break;
 			case 'q':
 				//Quit program without saving
 				exit = 1;
-				break;
-			case '^': //Handles ctrl key input
-				switch(keyLong[1]){
-					case 'Q':
-						exit = 1;
-						break;
-					case 'I': //ctrl-I and also TAB ('\t')
-						rotate_cur_pc();
-						invalid = 1;
-						break;
-					default:
-						invalid = 1;
-						break;
-				}
 				break;
 			default:
 				//The key input was not a invalid key and thus a new key should be input.
@@ -196,20 +237,20 @@ int main(int argc, char** argv){
 				break;
 		}
 		
-		mvprintw(0,0,"%d\n", model->pcs[model->cur_pc]->turns);
-		
 		//Read new input
 		if(invalid){
 			continue;
 		}
-		int turnless = 0;
-		while(model->pcs[model->cur_pc]->turns <= 0){
-			rotate_cur_pc();
-			turnless++;
-			//If all pcs have no more moves, exit.
-			if(turnless >= model->num_pcs){
-				exit = 1;
-				break;
+		if(model->cur_pc != -1){
+			int turnless = 0;
+			while(model->squad[model->cur_pc]->turns <= 0){
+				rotate_cur_pc();
+				turnless++;
+				//If all squad have no more moves, exit.
+				if(turnless >= model->num_pcs){
+					exit = 1;
+					break;
+				}
 			}
 		}
 		
@@ -217,7 +258,6 @@ int main(int argc, char** argv){
 		if(exit){
 			break;
 		}
-		
 	}
 
 	//delete ncurses window
@@ -356,7 +396,7 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_inf
 			l_name[length] = '\0';
 			players[i]->l_name = l_name;
 			
-			players[i]->available = 1;
+			players[i]->in_squad = 0;
 		}
 		return players;
 	}

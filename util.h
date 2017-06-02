@@ -21,6 +21,12 @@
 
 #define LOG_FILE_PATH "btlog"
 
+//UI MODES
+#define MODE_GAME 1
+#define MODE_SELECT_SQUAD 2
+
+#define MAX_SQUAD_SIZE 5
+
 void init_color_pairs();
 int is_alphanumeric_char(char);
 int is_path_char(char);

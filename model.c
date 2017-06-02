@@ -10,8 +10,8 @@ model_t *model;
 
 int rotate_cur_pc(){
 	model->cur_pc = (model->cur_pc + 1) % model->num_pcs;
-	model->moveY = model->pcs[model->cur_pc]->y;
-	model->moveX = model->pcs[model->cur_pc]->x;
+	model->moveY = model->squad[model->cur_pc]->y;
+	model->moveX = model->squad[model->cur_pc]->x;
 	return model->cur_pc;
 }
 
@@ -29,10 +29,13 @@ model_t *init_model(){
 	}
 	int i;
 	model = (model_t *)malloc(sizeof(model_t));
-	model->cur_pc = 0;
+	model->cur_pc = -1;
+	model->moveY = -1;
+	model->moveX = -1;
 	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
 		model->char_loc[i] = NULL;
 	}
+	model->selection = 0;
 	
 	return model;
 }
@@ -44,10 +47,13 @@ void free_model(model_t* model){
 	}
 	free(model->pc_info);
 	
-	for(i = 0; i < model->num_pcs; i++){
-		free_character(model->pcs[i]);
+	if(model->squad){
+		for(i = 0; i < model->num_pcs; i++){
+			free_character(model->squad[i]);
+		}
 	}
-	free(model->pcs);
+	
+	free(model->squad);
 	
 	free(model->map);
 	free(model);

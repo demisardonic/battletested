@@ -60,7 +60,7 @@ int move_character(model_t *model, character_t *character, int y, int x){
 	model->char_loc[yx_to_index(character->y, character->x)] = character;
 	int i;
 	for(i = 0; i < model->num_pcs; i++){
-		update_valid_moves(model->char_loc, model->map, model->pcs[i]);
+		update_valid_moves(model->char_loc, model->map, model->squad[i]);
 	}
 	return cost;
 }
@@ -88,6 +88,8 @@ character_t *init_character(character_info_t *info){
 }
 
 void free_character(character_t* c){
-	free(c->movement_map);
+	if(c){
+		free(c->movement_map);
+	}
 	free(c);
 }

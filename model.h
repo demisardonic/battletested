@@ -14,11 +14,12 @@ typedef struct model{
 	
 	struct character_info **pc_info;
 	int num_pc_info;
-	struct character **pcs;
+	struct character **squad;
 	int num_pcs;
 	
 	int moveY;
 	int moveX;
+	int selection;
 	int cur_pc;
 	
 	struct character *char_loc[GAME_HEIGHT * GAME_WIDTH];

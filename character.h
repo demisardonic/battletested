@@ -10,7 +10,7 @@ struct model;
 typedef struct character_info{
 	char* f_name;
 	char* l_name;
-	uint8_t available;
+	uint8_t in_squad;
 } character_info_t;
 
 typedef struct character{
