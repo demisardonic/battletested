@@ -144,6 +144,8 @@ int main(int argc, char** argv){
 				} else if(ui->mode == MODE_SELECT_SQUAD){
 					if(model->selection > 0){
 						model->selection--;
+					}else{
+						model->selection = model->num_pc_info-1;
 					}
 				}
 				break;
@@ -156,6 +158,8 @@ int main(int argc, char** argv){
 				} else if(ui->mode == MODE_SELECT_SQUAD){
 					if(model->selection < model->num_pc_info-1){
 						model->selection++;
+					}else{
+						model->selection = 0;
 					}
 				}
 				break;
@@ -182,7 +186,7 @@ int main(int argc, char** argv){
 					if(model->pc_info[model->selection]->in_squad && model->num_pcs > 0){
 						model->pc_info[model->selection]->in_squad = 0;
 						model->num_pcs--;
-					}else if(!model->pc_info[model->selection]->in_squad && model->num_pcs < MAX_SQUAD_SIZE - 1){
+					}else if(!model->pc_info[model->selection]->in_squad && model->num_pcs < MAX_SQUAD_SIZE){
 						model->pc_info[model->selection]->in_squad = 1;
 						model->num_pcs++;
 					}
@@ -368,38 +372,48 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_inf
 		}
 		character_info_t **players = (character_info_t **) malloc(sizeof(character_info_t *) * (*num_char_info));
 		int i;
-		int length;
+		uint8_t buff8;
 		for(i = 0; i < *num_char_info; i++){
 			
 			players[i] = (character_info_t *) malloc(sizeof(character_info_t));
 			
-			if(!fread(&length, sizeof(uint32_t), 1, input)){
-				fprintf(stderr, "Failed to read Name Length\n");
+			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
+				fprintf(stderr, "Failed to read Name buff8\n");
 				return NULL;
 			}
 			
-			char *f_name = (char *) malloc(sizeof(char) * (length + 1));
+			char *f_name = (char *) malloc(sizeof(char) * (buff8 + 1));
 			
-			if(!fread(f_name, sizeof(char), length, input)){
-				fprintf(stderr, "Failed to read Name Length\n");
+			if(!fread(f_name, sizeof(char), buff8, input)){
+				fprintf(stderr, "Failed to read Name buff8\n");
 				return NULL;
 			}
-			f_name[length] = '\0';
+			f_name[buff8] = '\0';
 			players[i]->f_name = f_name;
 			
-			if(!fread(&length, sizeof(uint32_t), 1, input)){
-				fprintf(stderr, "Failed to read Name Length\n");
+			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
+				fprintf(stderr, "Failed to read Name buff8\n");
 				return NULL;
 			}
 			
-			char *l_name = (char *) malloc(sizeof(char) * (length + 1));
+			char *l_name = (char *) malloc(sizeof(char) * (buff8 + 1));
 			
-			if(!fread(l_name, sizeof(char), length, input)){
-				fprintf(stderr, "Failed to read Name Length\n");
+			if(!fread(l_name, sizeof(char), buff8, input)){
+				fprintf(stderr, "Failed to read Name buff8\n");
 				return NULL;
 			}
-			l_name[length] = '\0';
+			l_name[buff8] = '\0';
 			players[i]->l_name = l_name;
+			
+			int j;
+			for(j=0; j < 7; j++){
+				if(!fread(&buff8, sizeof(uint8_t), 1, input)){
+					fprintf(stderr, "Failed to read stat %d\n", j);
+					return NULL;
+				}
+				players[i]->stats[j] = buff8;
+			}
+			
 			
 			players[i]->in_squad = 0;
 		}

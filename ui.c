@@ -39,6 +39,12 @@ static void draw_char_color(int y, int x, uint8_t val, int color){
 static void draw_cur_pc_info(character_t *pc){
 	mvprintw(BOTTOM_BAR_1, 0, LINE_CLEAR);
 	mvprintw(BOTTOM_BAR_1, 0, "Name:%s %s X:%d Y:%d", pc->info->f_name, pc->info->l_name, pc->x, pc->y);
+	
+	move(BOTTOM_BAR_2, 0);
+	int i;
+	for(i = 0; i < 7; i++){
+		printw("S%d:%d ", i, pc->info->stats[i]);
+	}
 }
 
 static void draw_boarder(){
@@ -114,6 +120,11 @@ static void draw_select_squad(){
 				mvaddch(i+2,1, '*');
 			}
 			mvprintw(i+2,3, "%s %s", ui->model->pc_info[i]->f_name, ui->model->pc_info[i]->l_name);
+			move(i+2, 23);
+			int j;
+			for(j = 0; j < 7; j++){
+				printw("S%d:%d ", j, ui->model->pc_info[i]->stats[j]);
+			}
 		}
 	}
 	
