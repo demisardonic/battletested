@@ -107,13 +107,7 @@ static void draw_game(){
 
 static void draw_select_squad(){
 	int i;
-	
-	for(i = 0; i < GAME_HEIGHT; i++){
-		mvaddch(i+2, 1, ' ');
-		mvaddch(i+2, 2, ' ');
-		mvaddch(i+2, GAME_WIDTH, ' ');
-	}
-	
+	clear();
 	for(i = 0; i < ui->model->num_pc_info; i++){
 		if(ui->model->pc_info[i]){
 			if(ui->model->pc_info[i]->in_squad){

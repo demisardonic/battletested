@@ -19,7 +19,6 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_len
 int main(int argc, char** argv){
 	srand(time(NULL));
 	int i;
-	int curr_squad_size = 0;
 	
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
@@ -91,19 +90,6 @@ int main(int argc, char** argv){
 	for(i = 0; i < MAX_SQUAD_SIZE; i++){
 		model->squad[i] = NULL;
 	}
-	/*
-	for(i = 0; i < model->num_pcs; i++){
-		model->squad[i] = init_character(player_info[i]);
-		model->char_loc[yx_to_index(model->squad[i]->y, model->squad[i]->x)] = model->squad[i];
-	}
-	//Create the valid move map for every player
-	for(i = 0; i < model->num_pcs; i++){
-		update_valid_moves(model->char_loc, model->map, model->squad[i]);
-	}
-	model->moveY = model->squad[model->cur_pc]->y;
-	model->moveX = model->squad[model->cur_pc]->x;
-	*/
-	
 	
 	logger("Initializing ui.");
 	//Create the ui struct and store a read-only model pointer
@@ -139,12 +125,15 @@ int main(int argc, char** argv){
 		//Pull keyboard input
 		int key = getch();
 		
-		mvprintw(0, 0, "%d", curr_squad_size);
-		
 		switch(key){
 			case 'i':
-				ui->mode = ui->mode == MODE_GAME ? MODE_SELECT_SQUAD : MODE_GAME;
-				clear();
+				if(ui->mode == MODE_GAME){
+					logger("Switching to Squad Selection UI.");
+					ui->mode = MODE_SELECT_SQUAD;
+				} else {
+					logger("Switching to Game UI.");
+					ui->mode = MODE_GAME;
+				}
 				break;
 			case 'w':
 				if(ui->mode == MODE_GAME){
@@ -190,19 +179,25 @@ int main(int argc, char** argv){
 						model->moveX = model->squad[model->cur_pc]->x;
 					}
 				} else if(ui->mode == MODE_SELECT_SQUAD){
-					if(model->pc_info[model->selection]->in_squad && curr_squad_size > 0){
+					if(model->pc_info[model->selection]->in_squad && model->num_pcs > 0){
 						model->pc_info[model->selection]->in_squad = 0;
-						curr_squad_size--;
-					}else if(!model->pc_info[model->selection]->in_squad && curr_squad_size < MAX_SQUAD_SIZE - 1){
+						model->num_pcs--;
+					}else if(!model->pc_info[model->selection]->in_squad && model->num_pcs < MAX_SQUAD_SIZE - 1){
 						model->pc_info[model->selection]->in_squad = 1;
-						curr_squad_size++;
+						model->num_pcs++;
 					}
 				}
 				break;
 			case '\n':
 				if(ui->mode == MODE_SELECT_SQUAD){
+					logger("Setting new Squad Selection.");
+					logger("Clearing current squad of size %d.", model->num_pcs);
 					for(i = 0; i < model->num_pcs; i++){
-						free_character(model->squad[i]);
+						if(model->squad[i]){
+							model->char_loc[yx_to_index(model->squad[i]->y, model->squad[i]->x)] = NULL;
+							free_character(model->squad[i]);
+							model->squad[i] = NULL;
+						}
 					}
 					model->num_pcs = 0;
 					model->cur_pc = -1;
@@ -219,6 +214,7 @@ int main(int argc, char** argv){
 							count++;
 						}
 					}
+					ui->mode = MODE_GAME;
 				}
 				break;
 			case '\t':

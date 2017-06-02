@@ -32,10 +32,12 @@ model_t *init_model(){
 	model->cur_pc = -1;
 	model->moveY = -1;
 	model->moveX = -1;
+	model->selection = 0;
+	model->num_pcs = 0;
+	
 	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
 		model->char_loc[i] = NULL;
 	}
-	model->selection = 0;
 	
 	return model;
 }
