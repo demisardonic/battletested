@@ -40,7 +40,7 @@ int main(int argc, char** argv){
 						fprintf(stderr, "Incorrect usage of --load.");
 						return 1;
 					}
-				}else if(!strcmp("--seed", argv[i])){ //Load argument
+				}else if(!strcmp("--seed", argv[i])){ //Seed argument
 					if(i+1 < argc){
 						seed = atoi(argv[++i]);
 					}else{
@@ -75,7 +75,7 @@ int main(int argc, char** argv){
 	uint8_t *map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
 	model->map = map;
 	if(read_map_from_file(loadPath, model->map)){
-		logger("Failed to read %s, generating blank map. ");
+		logger("Failed to read map generating blank map. ");
 		//If map cannot be read from file initialize blank map.
 		int i;
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
@@ -258,14 +258,23 @@ int main(int argc, char** argv){
 
 	//delete ncurses window
 	endwin();
-
+	
+	logger("Freeing ui");
 	free_ui(ui);
+	logger("Freeing model");
 	free_model(model);
+	
+	logger("Exiting Sucessfully");
 	return 0;
 }
 
 //Output map array generated from reading the given file path
 int read_map_from_file(const char* path, uint8_t *map){
+	//If the path is empty return
+	if(!path[0]){
+		return 1;
+	}
+	
 	FILE *input = fopen(path, "r");
 	if(!input){
 		fprintf(stderr, "File %s does not exist.\n", path);
