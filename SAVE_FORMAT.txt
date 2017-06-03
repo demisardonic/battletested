@@ -12,7 +12,14 @@ PLAYERS
 7	# of player info
 
 Version 1
-4	length of first name
+1	length of first name
 n	first name
 4	length of last name
-n	last name
+1	last name
+1	Stat 1
+1	Stat 2
+1	Stat 3
+1	Stat 4
+1	Stat 5
+1	Stat 6
+1	Stat 7
