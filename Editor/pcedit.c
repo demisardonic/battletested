@@ -26,6 +26,7 @@ typedef struct character_info{
 void draw_boarder();
 void draw_selected(uint8_t selected, const char* fmt, ...);
 void ui_prompt(char* input, const char* fmt, ...);
+void ui_prompt_val(int* val, const char* fmt, ...);
 int is_alphanumeric_char(char val);
 int is_path_char(char val);
 character_info_t *read_characters_from_file(const char* path, uint8_t *num_pc_info);
@@ -35,9 +36,9 @@ int main(int argc, char** argv){
 	
 	character_info_t *player_info = NULL;
 	uint8_t num_pc_info = 0;
-	int selection = 0;
+	uint8_t selection = 0;
 	int top = 0;
-	int edit_section = 0;
+	uint8_t edit_section = 0;
 	
 	int i, j;
 	
@@ -155,11 +156,37 @@ int main(int argc, char** argv){
 				selection = selection < num_pc_info? selection+1 : 0;
 				edit_section = 0;
 				break;
+			case 'a':
 			case KEY_LEFT:
-			
+				if(edit_section){
+					edit_section--;
+					if(edit_section < 1){
+						edit_section = NUM_FIELDS;
+					}
+				}
 				break;
+			case 'd':
 			case KEY_RIGHT:
-			
+				if(edit_section){
+					edit_section++;
+					if(edit_section > NUM_FIELDS){
+						edit_section = 1;
+					}
+				}
+				break;
+			case ' ':
+				if(edit_section == 1){
+					ui_prompt(player_info[selection].f_name, "First name :");
+				}else if(edit_section == 2){
+					ui_prompt(player_info[selection].l_name, "Last name :");
+				}else if(edit_section > 2 &&  edit_section <= NUM_FIELDS){
+					int val = 0;
+					ui_prompt_val(&val, "Stat (255 max): ");
+					while(val >= 256){
+						ui_prompt_val(&val, "Stat (255 max): ");
+					}
+					player_info[selection].stats[edit_section-3] = (uint8_t) val;
+				}
 				break;
 			case '\n':
 				edit_section = edit_section ? 0 : 1;
@@ -240,7 +267,8 @@ void ui_prompt(char* input, const char* fmt, ...){
 			index--;
 			input[index] = '\0';
 			mvprintw(0, 0, LINE_CLEAR);
-			mvprintw(0, 0, "Open: %s", input);
+			mvprintw(0, 0, fmt, args);
+			printw("%s", input);
 		}else if(textKey == 27){
 			escape = 1;
 			curs_set(0);
@@ -257,6 +285,50 @@ void ui_prompt(char* input, const char* fmt, ...){
 		}
 	}
 	curs_set(0);
+}
+
+void ui_prompt_val(int* val, const char* fmt, ...){
+	char input[BUFFER_SIZE];
+	memset(input, 0, BUFFER_SIZE);
+	int textKey;
+	int index = 0;
+	int escape = 0;
+	curs_set(1);
+	va_list args;
+	va_start(args, fmt);
+	mvprintw(0, 0, LINE_CLEAR);
+	mvprintw(0, 0, fmt, args);
+	va_end(args);
+	textKey = getch();
+	while(textKey != '\n'){
+		if(textKey >= '0' && textKey <= '9'){
+			addch(textKey);
+			input[index] = textKey;
+			index++;
+			input[index] = '\0';
+		}else if(textKey == KEY_BACKSPACE){
+			index--;
+			input[index] = '\0';
+			mvprintw(0, 0, LINE_CLEAR);
+			mvprintw(0, 0, fmt, args);
+			printw("%s", input);
+		}else if(textKey == 27){
+			escape = 1;
+			curs_set(0);
+			input[0] = '\0';
+			break;
+		}
+		textKey = getch();
+	}
+	if(!escape){
+		if(index == 0){
+			input[0] = '\0';
+		}else{
+			input[index] = '\0';
+		}
+	}
+	curs_set(0);
+	*val = atoi(input);
 }
 
 //Output a character_info array
@@ -286,7 +358,6 @@ character_info_t *read_characters_from_file(const char* path, uint8_t *num_pc_in
 	}
 	
 	if(version == 1){
-		
 		if(!fread(num_pc_info, sizeof(uint8_t), 1, input)){
 			fprintf(stderr, "No num_pc_info.\n");
 			return NULL;
