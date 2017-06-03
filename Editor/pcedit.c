@@ -13,6 +13,8 @@
 #define BUFFER_SIZE (1<<8)
 #define VERSION 1
 #define LINE_CLEAR "                                                                                "
+#define NUM_FIELDS 9
+#define COLOR_SELECTED 1
 
 typedef struct character_info{
 	char* f_name;
@@ -21,14 +23,23 @@ typedef struct character_info{
 	uint8_t in_squad;
 } character_info_t;
 
-int draw_boarder();
-character_info_t *read_characters_from_file(const char* path, uint8_t *num_char_info);
+void draw_boarder();
+void draw_selected(uint8_t selected, const char* fmt, ...);
+void ui_prompt(char* input, const char* fmt, ...);
+int is_alphanumeric_char(char val);
+int is_path_char(char val);
+character_info_t *read_characters_from_file(const char* path, uint8_t *num_pc_info);
 int save_characters_to_file(character_info_t *pcs, uint8_t len, const char* path);
 
 int main(int argc, char** argv){
 	
-	character_info_t *player_info;
-	uint8_t num_pc_info;
+	character_info_t *player_info = NULL;
+	uint8_t num_pc_info = 0;
+	int selection = 0;
+	int top = 0;
+	int edit_section = 0;
+	
+	int i, j;
 	
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
@@ -39,8 +50,6 @@ int main(int argc, char** argv){
 	
 	if(argc > 1){
 		int i;
-		strcpy(savePath, argv[1]);
-		strcpy(loadPath, argv[1]);
 		for(i = 1; i < argc; i++){
 			if(argv[i][0] == '-'){
 				if(!strcmp("--save", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 's')){ //Save argument
@@ -65,7 +74,7 @@ int main(int argc, char** argv){
 	}
 	//If the loadPath was not changed via commandline arguments.
 	if(loadPath[0] != '\0'){
-		player_info = read_characters_from_file("players.btp", &num_pc_info);
+		player_info = read_characters_from_file(loadPath, &num_pc_info);
 	}
 	//If map cannot be read from file or no path is provided initialize blank map.
 	if(!player_info){
@@ -78,6 +87,7 @@ int main(int argc, char** argv){
 	noecho();
 	curs_set(0);
 	keypad(stdscr, TRUE);
+	init_pair(COLOR_SELECTED, COLOR_BLACK, COLOR_WHITE);
 
 	//Draw the border
 	draw_boarder();
@@ -88,11 +98,80 @@ int main(int argc, char** argv){
 	//Exit means input should no longer be read and program will close after key is handled
 	int exit = 0;
 	while(1){
+		
+		for(i = top; i < num_pc_info + top; i++){
+			move(i+2, 3);
+			
+			if(selection == i && edit_section == 1){
+				attron(COLOR_PAIR(COLOR_SELECTED));
+			}
+			printw("%s ", player_info[i].f_name);
+			if(selection == i && edit_section == 1){
+				attroff(COLOR_PAIR(COLOR_SELECTED));
+			}
+			if(selection == i && edit_section == 2){
+				attron(COLOR_PAIR(COLOR_SELECTED));
+			}
+			printw("%s ", player_info[i].l_name);
+			if(selection == i && edit_section == 2){
+				attroff(COLOR_PAIR(COLOR_SELECTED));
+			}
+
+			move(i+2, 23);
+			for(j = 0; j < 7; j++){
+				if(selection == i && edit_section == 3+j){
+				attron(COLOR_PAIR(COLOR_SELECTED));
+				}
+				printw("S%d:%d ", j, player_info[i].stats[j]);
+				if(selection == i && edit_section == 3+j){
+					attroff(COLOR_PAIR(COLOR_SELECTED));
+				}
+			}
+		}
+		mvaddch(i+2, 3, '+');
+		for(i = 0; i<GAME_HEIGHT; i++){
+			mvaddch(i+2, 1, ' ');
+			mvaddch(i+2, 2, ' ');
+			mvaddch(i+2, GAME_WIDTH, ' ');
+		}
+		mvaddch(selection+2, 2, '[');
+		mvaddch(selection+2, GAME_WIDTH, ']');
+		if(edit_section){
+			mvaddch(selection+2, 1, '*');
+		}
+		
 		valid = 1;
 		//Pull keyboard input
 		int key = getch();
 		
 		switch(key){
+			case 'w':
+			case KEY_UP:
+				selection = selection > 0? selection-1 : num_pc_info;
+				edit_section = 0;
+				break;
+			case 's':
+			case KEY_DOWN:
+				selection = selection < num_pc_info? selection+1 : 0;
+				edit_section = 0;
+				break;
+			case KEY_LEFT:
+			
+				break;
+			case KEY_RIGHT:
+			
+				break;
+			case '\n':
+				edit_section = edit_section ? 0 : 1;
+				break;
+			case '\t':
+				if(edit_section){
+					edit_section++;
+					if(edit_section > NUM_FIELDS){
+						edit_section = 1;
+					}
+				}
+				break;
 			case 'q':
 				exit = 1;
 				break;
@@ -114,15 +193,15 @@ int main(int argc, char** argv){
 	//delete ncurses window
 	endwin();
 
-	if(savePath[0] != '\0'){
+	if(savePath[0] != '\0' && player_info){
 		save_characters_to_file(player_info, num_pc_info, savePath);
 	}
-	
+	free(player_info);
 	return 0;
 }
 
 //Draw decorate boarder around map
-int draw_boarder(){
+void draw_boarder(){
 	int i, j;
 	for(i = 1; i < GAME_HEIGHT+1; i++){
 		mvaddch(i+1, 0, ACS_VLINE);
@@ -136,11 +215,52 @@ int draw_boarder(){
 	mvaddch(0+1,GAME_WIDTH+1, ACS_URCORNER);
 	mvaddch(GAME_HEIGHT+1+1,0, ACS_LLCORNER);
 	mvaddch(GAME_HEIGHT+1+1,GAME_WIDTH+1, ACS_LRCORNER);
-	return 0;
+}
+
+
+void ui_prompt(char* input, const char* fmt, ...){
+	int textKey;
+	int index = 0;
+	int escape = 0;
+	curs_set(1);
+	va_list args;
+	va_start(args, fmt);
+	mvprintw(0, 0, LINE_CLEAR);
+	mvprintw(0, 0, fmt, args);
+	va_end(args);
+	textKey = getch();
+	while(textKey != '\n'){
+		
+		if(is_path_char(textKey)){
+			addch(textKey);
+			input[index] = textKey;
+			index++;
+			input[index] = '\0';
+		}else if(textKey == KEY_BACKSPACE){
+			index--;
+			input[index] = '\0';
+			mvprintw(0, 0, LINE_CLEAR);
+			mvprintw(0, 0, "Open: %s", input);
+		}else if(textKey == 27){
+			escape = 1;
+			curs_set(0);
+			input[0] = '\0';
+			break;
+		}
+		textKey = getch();
+	}
+	if(!escape){
+		if(index == 0){
+			input[0] = '\0';
+		}else{
+			input[index] = '\0';
+		}
+	}
+	curs_set(0);
 }
 
 //Output a character_info array
-character_info_t *read_characters_from_file(const char* path, uint8_t *num_char_info){
+character_info_t *read_characters_from_file(const char* path, uint8_t *num_pc_info){
 	FILE *input = fopen(path, "r");
 	if(!input){
 		fprintf(stderr, "File %s does not exist.\n", path);
@@ -167,14 +287,14 @@ character_info_t *read_characters_from_file(const char* path, uint8_t *num_char_
 	
 	if(version == 1){
 		
-		if(!fread(num_char_info, sizeof(uint8_t), 1, input)){
-			fprintf(stderr, "No num_char_info.\n");
+		if(!fread(num_pc_info, sizeof(uint8_t), 1, input)){
+			fprintf(stderr, "No num_pc_info.\n");
 			return NULL;
 		}
-		character_info_t *players = (character_info_t *) malloc(sizeof(character_info_t) * (*num_char_info));
+		character_info_t *players = (character_info_t *) malloc(sizeof(character_info_t) * (*num_pc_info));
 		int i;
 		uint8_t buff8;
-		for(i = 0; i < *num_char_info; i++){
+		for(i = 0; i < *num_pc_info; i++){
 			
 			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
 				fprintf(stderr, "Failed to read Name buff8\n");
@@ -219,6 +339,26 @@ character_info_t *read_characters_from_file(const char* path, uint8_t *num_char_
 		return players;
 	}
 	return NULL;
+}
+
+int is_alphanumeric_char(char val){
+	if(val >= 'a' && val <= 'z'){
+		return 1;
+	}
+	if(val >= 'A' && val <= 'Z'){
+		return 1;
+	}
+	if(val >= '0' && val <= '9'){
+		return 1;
+	}
+	return 0;
+}
+
+int is_path_char(char val){
+	if(val == '.' || val == '_' || val == '-' || val == '/'){
+		return 1;
+	}
+	return is_alphanumeric_char(val);
 }
 
 //Save the map array to file
