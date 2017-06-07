@@ -239,6 +239,10 @@ int main(int argc, char** argv){
 	if(savePath[0] != '\0' && player_info){
 		save_characters_to_file(player_info, num_pc_info, savePath);
 	}
+	for(i = 0; i < num_pc_info; i++){
+		free(player_info[i].l_name);
+		free(player_info[i].f_name);
+	}
 	free(player_info);
 	return 0;
 }
