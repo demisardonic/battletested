@@ -13,6 +13,7 @@
 #define BUFFER_SIZE (1<<8)
 #define VERSION 1
 #define LINE_CLEAR "                                                                                "
+#define GAME_LINE_CLEAR "                                                                              "
 #define NUM_FIELDS 9
 #define COLOR_SELECTED 1
 
@@ -20,7 +21,6 @@ typedef struct character_info{
 	char* f_name;
 	char* l_name;
 	uint8_t stats[7];
-	uint8_t in_squad;
 } character_info_t;
 
 void draw_boarder();
@@ -29,12 +29,12 @@ void ui_prompt(char* input, const char* fmt, ...);
 void ui_prompt_val(int* val, const char* fmt, ...);
 int is_alphanumeric_char(char val);
 int is_path_char(char val);
-character_info_t *read_characters_from_file(const char* path, uint8_t *num_pc_info);
+int read_characters_from_file(const char* path, character_info_t *pcs, uint8_t *num_pc_info);
 int save_characters_to_file(character_info_t *pcs, uint8_t len, const char* path);
 
 int main(int argc, char** argv){
 	
-	character_info_t *player_info = NULL;
+	character_info_t player_info[BUFFER_SIZE];
 	uint8_t num_pc_info = 0;
 	uint8_t selection = 0;
 	int top = 0;
@@ -75,11 +75,7 @@ int main(int argc, char** argv){
 	}
 	//If the loadPath was not changed via commandline arguments.
 	if(loadPath[0] != '\0'){
-		player_info = read_characters_from_file(loadPath, &num_pc_info);
-	}
-	//If map cannot be read from file or no path is provided initialize blank map.
-	if(!player_info){
-		
+		read_characters_from_file(loadPath, player_info, &num_pc_info);
 	}
 	//NCurses screen initialization
 	initscr();
@@ -99,10 +95,9 @@ int main(int argc, char** argv){
 	//Exit means input should no longer be read and program will close after key is handled
 	int exit = 0;
 	while(1){
-		
+		clear();
 		for(i = top; i < num_pc_info + top; i++){
 			move(i+2, 3);
-			
 			if(selection == i && edit_section == 1){
 				attron(COLOR_PAIR(COLOR_SELECTED));
 			}
@@ -117,7 +112,6 @@ int main(int argc, char** argv){
 			if(selection == i && edit_section == 2){
 				attroff(COLOR_PAIR(COLOR_SELECTED));
 			}
-
 			move(i+2, 23);
 			for(j = 0; j < 7; j++){
 				if(selection == i && edit_section == 3+j){
@@ -140,6 +134,7 @@ int main(int argc, char** argv){
 		if(edit_section){
 			mvaddch(selection+2, 1, '*');
 		}
+		draw_boarder();
 		
 		valid = 1;
 		//Pull keyboard input
@@ -190,6 +185,16 @@ int main(int argc, char** argv){
 				break;
 			case '\n':
 				edit_section = edit_section ? 0 : 1;
+				if(selection == num_pc_info){
+					player_info[num_pc_info].f_name = (char *) malloc(sizeof(char) * 6);
+					strcpy(player_info[num_pc_info].f_name, "first");
+					player_info[num_pc_info].l_name = (char *) malloc(sizeof(char) * 5);
+					strcpy(player_info[num_pc_info].l_name, "last");
+					for(i = 0; i < 7; i++){
+						player_info[num_pc_info].stats[i] = 1;
+					}
+					num_pc_info++;
+				}
 				break;
 			case '\t':
 				if(edit_section){
@@ -220,10 +225,14 @@ int main(int argc, char** argv){
 	//delete ncurses window
 	endwin();
 
-	if(savePath[0] != '\0' && player_info){
+	if(savePath[0] != '\0'){
 		save_characters_to_file(player_info, num_pc_info, savePath);
 	}
-	free(player_info);
+	
+	for(i = 0; i < BUFFER_SIZE; i++){
+		free(player_info[i].f_name);
+		free(player_info[i].l_name);
+	}
 	return 0;
 }
 
@@ -331,87 +340,6 @@ void ui_prompt_val(int* val, const char* fmt, ...){
 	*val = atoi(input);
 }
 
-//Output a character_info array
-character_info_t *read_characters_from_file(const char* path, uint8_t *num_pc_info){
-	FILE *input = fopen(path, "r");
-	if(!input){
-		fprintf(stderr, "File %s does not exist.\n", path);
-		return NULL;
-	}
-
- 	char buffer[BUFFER_SIZE];
-	if(fread(buffer, sizeof(char), 6, input) != 6){
-		fprintf(stderr, "Failed to read header.\n");
-		return NULL;
-	}
-	buffer[6] = '\0';
-
-	if(strcmp(buffer, "btlplr")){
-		fprintf(stderr, "Header did not match.\n");
-		return NULL;
-	}
-
-	uint8_t version;
-	if(!fread(&version, sizeof(uint8_t), 1, input)){
-		fprintf(stderr, "Ininvalid file.\n");
-		return NULL;
-	}
-	
-	if(version == 1){
-		if(!fread(num_pc_info, sizeof(uint8_t), 1, input)){
-			fprintf(stderr, "No num_pc_info.\n");
-			return NULL;
-		}
-		character_info_t *players = (character_info_t *) malloc(sizeof(character_info_t) * (*num_pc_info));
-		int i;
-		uint8_t buff8;
-		for(i = 0; i < *num_pc_info; i++){
-			
-			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
-				fprintf(stderr, "Failed to read Name buff8\n");
-				return NULL;
-			}
-			
-			char *f_name = (char *) malloc(sizeof(char) * (buff8 + 1));
-			
-			if(!fread(f_name, sizeof(char), buff8, input)){
-				fprintf(stderr, "Failed to read Name buff8\n");
-				return NULL;
-			}
-			f_name[buff8] = '\0';
-			players[i].f_name = f_name;
-			
-			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
-				fprintf(stderr, "Failed to read Name buff8\n");
-				return NULL;
-			}
-			
-			char *l_name = (char *) malloc(sizeof(char) * (buff8 + 1));
-			
-			if(!fread(l_name, sizeof(char), buff8, input)){
-				fprintf(stderr, "Failed to read Name buff8\n");
-				return NULL;
-			}
-			l_name[buff8] = '\0';
-			players[i].l_name = l_name;
-			
-			int j;
-			for(j=0; j < 7; j++){
-				if(!fread(&buff8, sizeof(uint8_t), 1, input)){
-					fprintf(stderr, "Failed to read stat %d\n", j);
-					return NULL;
-				}
-				players[i].stats[j] = buff8;
-			}
-			
-			
-			players[i].in_squad = 0;
-		}
-		return players;
-	}
-	return NULL;
-}
-
 int is_alphanumeric_char(char val){
 	if(val >= 'a' && val <= 'z'){
 		return 1;
@@ -432,6 +360,85 @@ int is_path_char(char val){
 	return is_alphanumeric_char(val);
 }
 
+//Output a character_info array
+int read_characters_from_file(const char* path, character_info_t *players, uint8_t *num_pc_info){
+	FILE *input = fopen(path, "r");
+	if(!input){
+		fprintf(stderr, "File %s does not exist.\n", path);
+		return 1;
+	}
+
+ 	char buffer[BUFFER_SIZE];
+	if(fread(buffer, sizeof(char), 6, input) != 6){
+		fprintf(stderr, "Failed to read header.\n");
+		return 1;
+	}
+	buffer[6] = '\0';
+
+	if(strcmp(buffer, "btlplr")){
+		fprintf(stderr, "Header did not match.\n");
+		return 1;
+	}
+
+	uint8_t version;
+	if(!fread(&version, sizeof(uint8_t), 1, input)){
+		fprintf(stderr, "Ininvalid file.\n");
+		return 1;
+	}
+	
+	if(version == 1){
+		if(!fread(num_pc_info, sizeof(uint8_t), 1, input)){
+			fprintf(stderr, "No num_pc_info.\n");
+			return 1;
+		}
+		//character_info_t *players = (character_info_t *) malloc(sizeof(character_info_t) * (*num_pc_info));
+		int i;
+		uint8_t buff8;
+		for(i = 0; i < *num_pc_info; i++){
+			
+			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
+				fprintf(stderr, "Failed to read Name buff8\n");
+				return 1;
+			}
+			
+			char *f_name = (char *) malloc(sizeof(char) * (buff8 + 1));
+			
+			if(!fread(f_name, sizeof(char), buff8, input)){
+				fprintf(stderr, "Failed to read Name buff8\n");
+				return 1;
+			}
+			f_name[buff8] = '\0';
+			players[i].f_name = f_name;
+			
+			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
+				fprintf(stderr, "Failed to read Name buff8\n");
+				return 1;
+			}
+			
+			char *l_name = (char *) malloc(sizeof(char) * (buff8 + 1));
+			
+			if(!fread(l_name, sizeof(char), buff8, input)){
+				fprintf(stderr, "Failed to read Name buff8\n");
+				return 1;
+			}
+			l_name[buff8] = '\0';
+			players[i].l_name = l_name;
+			
+			int j;
+			for(j=0; j < 7; j++){
+				if(!fread(&buff8, sizeof(uint8_t), 1, input)){
+					fprintf(stderr, "Failed to read stat %d\n", j);
+					return 1;
+				}
+				players[i].stats[j] = buff8;
+			}
+		}
+		return 0;
+	}
+	return 1;
+}
+
+
 //Save the map array to file
 int save_characters_to_file(character_info_t *pcs, uint8_t len, const char* path){
 	FILE* outfile = fopen(path, "w");
@@ -444,7 +451,24 @@ int save_characters_to_file(character_info_t *pcs, uint8_t len, const char* path
 	uint8_t ver = VERSION;
 	fwrite(&ver, 1, 1, outfile);
 	
-	//fwrite(pcs, sizeof(*pcs), len, outfile);
+	fwrite(&len, 1, 1, outfile);
+	
+	int i;
+	for(i = 0; i < len; i++){
+		uint8_t len = strlen(pcs[i].f_name);
+		fwrite(&len, 1, 1, outfile);
+		fwrite(pcs[i].f_name, sizeof(char), len, outfile);
+		
+		len = strlen(pcs[i].l_name);
+		fwrite(&len, 1, 1, outfile);
+		fwrite(pcs[i].l_name, sizeof(char), len, outfile);
+		
+		int j;
+		for(j = 0; j < 7; j++){
+			fwrite(&pcs[i].stats[j], 1, 1, outfile);
+		}
+		
+	}
 	
 	fclose(outfile);
 	return 0;
