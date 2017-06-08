@@ -8,13 +8,17 @@ all: mkdir $(BIN) none
 
 $(BIN):$(OBJS)
 	@echo Linking $@
-	@gcc $(FLAGS) $(OBJS) -o bin/$(BIN) $(LFLAGS)
+	@g++ $(FLAGS) $(OBJS) -o bin/$(BIN) $(LFLAGS)
 
 -include $(OBJS:.o=.d)
 
 %.o:%.c
 	@echo Compiling $<
 	@gcc $(FLAGS) -MMD -MF $*.d -c $<
+	
+%.o:%.cpp
+	@echo Compiling $<
+	@g++ $(FLAGS) -MMD -MF $*.d -c $<
 	
 mkdir:
 	@echo Making bin directory
