@@ -210,9 +210,9 @@ int main(int argc, char** argv){
 			case '\n':
 				edit_section = edit_section ? 0 : 1;
 				if(selection + top == num_pc_info){
-					character_info_t *newptr = (character_info_t *) realloc(player_info, (num_pc_info + 1) * sizeof(character_info_t));
-					if(newptr){
-						player_info = newptr;
+					character_info_t *new_ptr = (character_info_t *) realloc(player_info, (num_pc_info + 1) * sizeof(character_info_t));
+					if(new_ptr){
+						player_info = new_ptr;
 						player_info[num_pc_info].f_name = (char *) malloc(sizeof(char) * 6);
 						strcpy(player_info[num_pc_info].f_name, "first");
 						player_info[num_pc_info].l_name = (char *) malloc(sizeof(char) * 5);
@@ -233,6 +233,25 @@ int main(int argc, char** argv){
 					if(edit_section > NUM_FIELDS){
 						edit_section = 1;
 					}
+				}
+				break;
+			case KEY_DC:
+			case KEY_BACKSPACE:
+				if(selection + top < num_pc_info){
+					free(player_info[selection + top].f_name);
+					free(player_info[selection + top].l_name);
+					for(i = selection + top; i < num_pc_info - 1; i++){
+						player_info[i].f_name = player_info[i+1].f_name;
+						player_info[i].l_name = player_info[i+1].l_name;
+						for(j = 0; j < 7; j++){
+							player_info[i].stats[j] = player_info[i+1].stats[j];
+						}
+					}
+					character_info_t *new_array = (character_info_t *) realloc(player_info, sizeof(character_info_t) * (num_pc_info - 1));
+					if(new_array){
+						player_info = new_array;
+					}
+					num_pc_info--;
 				}
 				break;
 			case 'q':
