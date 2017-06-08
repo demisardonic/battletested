@@ -31,6 +31,7 @@ int is_alphanumeric_char(char val);
 int is_path_char(char val);
 character_info_t *read_characters_from_file(const char* path, uint8_t *num_pc_info);
 int save_characters_to_file(character_info_t *pcs, uint8_t len, const char* path);
+void free_characters(character_info_t* player_info, uint8_t num_pc_info);
 
 int main(int argc, char** argv){
 	
@@ -254,6 +255,18 @@ int main(int argc, char** argv){
 					num_pc_info--;
 				}
 				break;
+			case 19: //SAVE
+				ui_prompt(savePath, "Save: ");
+				if(savePath[0] != '\0'){
+					save_characters_to_file(player_info, num_pc_info, savePath);
+				}
+				break;
+			case 15: //OPEN
+				ui_prompt(loadPath, "Open: ");
+				if(loadPath[0] != '\0'){
+					player_info = read_characters_from_file(loadPath, &num_pc_info);
+				}
+				break;
 			case 'q':
 				exit = 1;
 				break;
@@ -274,15 +287,8 @@ int main(int argc, char** argv){
 
 	//delete ncurses window
 	endwin();
-
-	if(savePath[0] != '\0' && player_info){
-		save_characters_to_file(player_info, num_pc_info, savePath);
-	}
-	for(i = 0; i < num_pc_info; i++){
-		free(player_info[i].l_name);
-		free(player_info[i].f_name);
-	}
-	free(player_info);
+	
+	free_characters(player_info, num_pc_info);
 	return 0;
 }
 
@@ -408,6 +414,15 @@ int is_path_char(char val){
 		return 1;
 	}
 	return is_alphanumeric_char(val);
+}
+
+void free_characters(character_info_t* player_info, uint8_t num_pc_info){
+	int i;
+	for(i = 0; i < num_pc_info; i++){
+		free(player_info[i].l_name);
+		free(player_info[i].f_name);
+	}
+	free(player_info);
 }
 
 //Output a character_info array
