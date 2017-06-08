@@ -100,19 +100,19 @@ int main(int argc, char** argv){
 	int exit = 0;
 	while(1){
 		clear();
-		for(i = top; i < num_pc_info + top; i++){
+		for(i = 0; i < GAME_HEIGHT && i + top < num_pc_info; i++){
 			move(i+2, 3);
 			if(selection == i && edit_section == 1){
 				attron(COLOR_PAIR(COLOR_SELECTED));
 			}
-			printw("%s ", player_info[i].f_name);
+			printw("%s ", player_info[i + top].f_name);
 			if(selection == i && edit_section == 1){
 				attroff(COLOR_PAIR(COLOR_SELECTED));
 			}
 			if(selection == i && edit_section == 2){
 				attron(COLOR_PAIR(COLOR_SELECTED));
 			}
-			printw("%s ", player_info[i].l_name);
+			printw("%s ", player_info[i + top].l_name);
 			if(selection == i && edit_section == 2){
 				attroff(COLOR_PAIR(COLOR_SELECTED));
 			}
@@ -121,7 +121,7 @@ int main(int argc, char** argv){
 				if(selection == i && edit_section == 3+j){
 				attron(COLOR_PAIR(COLOR_SELECTED));
 				}
-				printw("S%d:%d ", j, player_info[i].stats[j]);
+				printw("S%d:%d ", j, player_info[i + top].stats[j]);
 				if(selection == i && edit_section == 3+j){
 					attroff(COLOR_PAIR(COLOR_SELECTED));
 				}
@@ -147,12 +147,32 @@ int main(int argc, char** argv){
 		switch(key){
 			case 'w':
 			case KEY_UP:
-				selection = selection > 0? selection-1 : num_pc_info;
+				if(selection > 0){
+					selection--;
+				}else if(top > 0){
+					top--;
+				}else if(num_pc_info < GAME_HEIGHT){
+					selection = num_pc_info;
+				}else{
+					selection = GAME_HEIGHT-1;
+					top = num_pc_info - GAME_HEIGHT + 1;
+				}
 				edit_section = 0;
 				break;
 			case 's':
 			case KEY_DOWN:
-				selection = selection < num_pc_info? selection+1 : 0;
+				if(selection < GAME_HEIGHT - 1){
+					if(selection < num_pc_info){
+						selection++;
+					}else{
+						selection = 0;
+					}
+				}else if(num_pc_info - top > GAME_HEIGHT - 1){
+					top++;
+				}else{
+					selection = 0;
+					top = 0;
+				}
 				edit_section = 0;
 				break;
 			case 'a':
@@ -189,10 +209,7 @@ int main(int argc, char** argv){
 				break;
 			case '\n':
 				edit_section = edit_section ? 0 : 1;
-				if(selection == num_pc_info){
-					mvprintw(0,0, "Resize to %d", (num_pc_info + 1));
-					refresh();
-
+				if(selection + top == num_pc_info){
 					character_info_t *newptr = (character_info_t *) realloc(player_info, (num_pc_info + 1) * sizeof(character_info_t));
 					if(newptr){
 						player_info = newptr;
@@ -205,6 +222,9 @@ int main(int argc, char** argv){
 						}
 					}
 					num_pc_info++;
+					if(selection == GAME_HEIGHT - 1){
+						top++;
+					}
 				}
 				break;
 			case '\t':
