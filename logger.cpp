@@ -5,17 +5,14 @@
 #include "util.h"
 
 int has_init = 0;
-char *path;
 
 static int init_log(){
   	has_init = 1;
-	
-	path = "log/"LOG_FILE_PATH;
-	
-  	FILE *fp = fopen(path, "w");
+
+  	FILE *fp = fopen(LOG_FILE_PATH, "w");
 
   	if(!fp){
-		path = LOG_FILE_PATH;
+		fprintf(stderr, "failed to create log file");
 		return 1;
 	}
 
