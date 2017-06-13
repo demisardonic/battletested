@@ -7,12 +7,12 @@
 #include "util.h"
 
 struct character;
-struct character_info;
+class Character_Info;
 
 typedef struct model{
 	uint8_t *map;
 	
-	struct character_info **pc_info;
+	Character_Info **pc_info;
 	int num_pc_info;
 	struct character **squad;
 	int num_pcs;

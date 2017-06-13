@@ -14,7 +14,7 @@
 
 int read_map_from_file(const char* path, uint8_t *map);
 int save_map_to_file(uint8_t *map, const char* path);
-character_info_t **read_characters_from_file(const char* path, int *num_char_len);
+Character_Info **read_characters_from_file(const char* path, int *num_char_len);
 
 int main(int argc, char** argv){
 	srand(time(NULL));
@@ -65,7 +65,7 @@ int main(int argc, char** argv){
 	//Load the players.btp file
 	int num_pc_info = 0;
 	logger("Reading player info.");
-	character_info_t **player_info = read_characters_from_file("players.btp", &num_pc_info);
+	Character_Info **player_info = read_characters_from_file("players.btp", &num_pc_info);
 	logger("Read %d players.", num_pc_info);
 	model->num_pc_info = num_pc_info;
 	model->pc_info = player_info;
@@ -339,7 +339,7 @@ int save_map_to_file(uint8_t *map, const char* path){
 }
 
 //Output a character_info array
-character_info_t **read_characters_from_file(const char* path, int *num_char_info){
+Character_Info **read_characters_from_file(const char* path, int *num_char_info){
 	FILE *input = fopen(path, "r");
 	if(!input){
 		fprintf(stderr, "File %s does not exist.\n", path);
@@ -370,12 +370,12 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_inf
 			fprintf(stderr, "No num_char_info.\n");
 			return NULL;
 		}
-		character_info_t **players = (character_info_t **) malloc(sizeof(character_info_t *) * (*num_char_info));
+		Character_Info **players = new Character_Info*[*num_char_info];
 		int i;
 		uint8_t buff8;
 		for(i = 0; i < *num_char_info; i++){
 			
-			players[i] = (character_info_t *) malloc(sizeof(character_info_t));
+			players[i] = new Character_Info;
 			
 			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
 				fprintf(stderr, "Failed to read Name buff8\n");

@@ -73,7 +73,7 @@ void free_character_info(character_info_t *info){
 	free(info);
 }
 
-character_t *init_character(character_info_t *info){
+character_t *init_character(Character_Info *info){
 	character_t *ch = (character_t *)malloc(sizeof(character_t));
 	ch->movement_map = (uint8_t *)malloc(sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
 	memset(ch->movement_map, 0, sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
