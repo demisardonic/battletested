@@ -1,3 +1,5 @@
+#include <string>
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +10,7 @@
 #include "model.h"
 #include "util.h"
 
-static void update_valid_moves_rec(character_t **char_loc, uint8_t *map, uint8_t *done, int dist, int y, int x){
+static void update_valid_moves_rec(Character **char_loc, uint8_t *map, uint8_t *done, int dist, int y, int x){
 	done[yx_to_index(y, x)] = dist;
 	if(dist > 0){
 		if(y-1 >= 0 && dist >= done[yx_to_index(y-1, x)] && !map[yx_to_index(y-1, x)] && !char_loc[yx_to_index(y-1, x)]){
@@ -26,13 +28,13 @@ static void update_valid_moves_rec(character_t **char_loc, uint8_t *map, uint8_t
 	}
 }
 
-void update_valid_moves(character_t **char_loc, uint8_t *map, character_t *character){
+void update_valid_moves(Character **char_loc, uint8_t *map, Character *character){
 	int distance = (character->speed * character->turns) + 1;
 	memset(character->movement_map, 0, sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
 	update_valid_moves_rec(char_loc, map, character->movement_map, distance, character->y, character->x);
 }
 
-int move_character(model_t *model, character_t *character, int y, int x){
+int move_character(Model *model, Character *character, int y, int x){
 	if(!character){
 		return 0;
 	}
@@ -60,36 +62,29 @@ int move_character(model_t *model, character_t *character, int y, int x){
 	model->char_loc[yx_to_index(character->y, character->x)] = character;
 	int i;
 	for(i = 0; i < model->num_pcs; i++){
-		update_valid_moves(model->char_loc, model->map, model->squad[i]);
+		update_valid_moves(model->char_loc, model->map, (*model->squad)[i]);
 	}
 	return cost;
 }
 
-void free_character_info(character_info_t *info){
-	if(info){
-		free(info->f_name);
-		free(info->l_name);
-	}
-	free(info);
+Character_Info::Character_Info(){
 }
 
-character_t *init_character(Character_Info *info){
-	character_t *ch = (character_t *)malloc(sizeof(character_t));
-	ch->movement_map = (uint8_t *)malloc(sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
-	memset(ch->movement_map, 0, sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
-	ch->x = rand() % GAME_WIDTH;
-	ch->y = rand() % GAME_HEIGHT;
-	ch->speed = 5;
-	ch->color = COLOR_DEFAULT;
-	ch->c = 'a';
-	ch->turns = 2;
-	ch->info = info;
-	return ch;
+Character_Info::~Character_Info(){
 }
 
-void free_character(character_t* c){
-	if(c){
-		free(c->movement_map);
-	}
-	free(c);
+Character::Character(Character_Info *info){
+	this->movement_map = (uint8_t *)malloc(sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
+	memset(this->movement_map, 0, sizeof(uint8_t) * GAME_HEIGHT * GAME_WIDTH);
+	this->x = rand() % GAME_WIDTH;
+	this->y = rand() % GAME_HEIGHT;
+	this->speed = 5;
+	this->color = COLOR_DEFAULT;
+	this->c = 'a';
+	this->turns = 2;
+	this->info = info;
+}
+
+Character::~Character(){
+	free(movement_map);
 }

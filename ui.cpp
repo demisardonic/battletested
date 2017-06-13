@@ -36,7 +36,7 @@ static void draw_char_color(int y, int x, uint8_t val, int color){
 	attroff(COLOR_PAIR(color));
 }
 
-static void draw_cur_pc_info(character_t *pc){
+static void draw_cur_pc_info(Character *pc){
 	mvprintw(BOTTOM_BAR_1, 0, LINE_CLEAR);
 	mvprintw(BOTTOM_BAR_1, 0, "Name:%s %s X:%d Y:%d", pc->info->f_name.c_str(), pc->info->l_name.c_str(), pc->x, pc->y);
 	
@@ -83,8 +83,8 @@ static void draw_game(){
 	if(ui->model->cur_pc != -1){
 		//Draw the current selected pc move area
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
-			if(ui->model->squad[ui->model->cur_pc]->movement_map[i] > 0){
-				if(ui->model->squad[ui->model->cur_pc]->movement_map[i]<=ui->model->squad[ui->model->cur_pc]->speed){
+			if((*ui->model->squad)[ui->model->cur_pc]->movement_map[i] > 0){
+				if((*ui->model->squad)[ui->model->cur_pc]->movement_map[i]<=(*ui->model->squad)[ui->model->cur_pc]->speed){
 					draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, ui->model->map[i], COLOR_DMOVE);
 				} else {
 					draw_char_color(i/GAME_WIDTH, i%GAME_WIDTH, ui->model->map[i], COLOR_MOVE);
@@ -97,17 +97,17 @@ static void draw_game(){
 		
 		//Draw all of the characters
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
-			character_t *ch = ui->model->char_loc[i];
+			Character *ch = ui->model->char_loc[i];
 			if(ch){
 				draw_char_color(ch->y, ch->x, ch->c, COLOR_DEFAULT);
 			}
 		}
 		
 		//Draw the currently selected player
-		draw_char_color(ui->model->squad[ui->model->cur_pc]->y, ui->model->squad[ui->model->cur_pc]->x, ui->model->squad[ui->model->cur_pc]->c, COLOR_PC);
+		draw_char_color((*ui->model->squad)[ui->model->cur_pc]->y, (*ui->model->squad)[ui->model->cur_pc]->x, (*ui->model->squad)[ui->model->cur_pc]->c, COLOR_PC);
 		
 		//Draw the selected player's info
-		draw_cur_pc_info(ui->model->squad[ui->model->cur_pc]);
+		draw_cur_pc_info((*ui->model->squad)[ui->model->cur_pc]);
 	}
 }
 
@@ -193,7 +193,7 @@ static void ui_prompt(char* input, const char* fmt, ...){
 	curs_set(0);
 }
 
-ui_t *init_ui(const model_t *model){
+ui_t *init_ui(const Model *model){
 	ui = (ui_t *)malloc(sizeof(ui_t));
 	ui->model = model;
 	

@@ -6,7 +6,7 @@
 #include "model.h"
 
 typedef struct ui {
-	const model_t *model;
+	const Model *model;
 	uint8_t mode;
 	
 	void (*draw)();
@@ -14,7 +14,7 @@ typedef struct ui {
 	void (*message)(const char*, ...);
 } ui_t;
 
-ui_t *init_ui(const model_t*);
+ui_t *init_ui(const Model*);
 void free_ui(ui_t*);
 
 #endif
