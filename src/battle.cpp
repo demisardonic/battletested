@@ -12,6 +12,7 @@
 #include "logger.h"
 #include "model.h"
 #include "ui.h"
+#include "ui/ui.h"
 #include "util.h"
 
 int read_map_from_file(const char* path, uint8_t *map);
@@ -63,6 +64,7 @@ int main(int argc, char** argv){
 	logger("Initializing model.");
 	//Initialize the model
 	Model *model = new Model;
+	UI *uiObj = new UI;
 	
 	//Load the players.btp file
 	int num_pc_info = 0;
@@ -108,8 +110,8 @@ int main(int argc, char** argv){
 	init_color_pairs();
 	
 	//Draw the loaded or blank screen
-	ui->draw();
-	refresh();
+	//ui->draw();
+	//refresh();
 
 	//invalid key means a new input can be parsed.
 	int invalid;
@@ -118,9 +120,9 @@ int main(int argc, char** argv){
 	
 	while(1){
 		//Redraw the ui
-		ui->draw();
-		refresh();
-		
+		//ui->draw();
+		//refresh();
+		uiObj->draw();
 		invalid = 0;
 		exit = 0;
 		
@@ -269,7 +271,7 @@ int main(int argc, char** argv){
 	free_ui(ui);
 	logger("Freeing model");
 	delete model;
-	
+	delete uiObj;
 	
 	logger("Exiting Sucessfully");
 	return 0;

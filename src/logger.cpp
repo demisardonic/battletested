@@ -6,6 +6,7 @@
 #include "util.h"
 
 int has_init = 0;
+char log_file[BUFFER_SIZE];
 
 static int init_log(){
   	has_init = 1;
@@ -19,7 +20,6 @@ static int init_log(){
 
     strftime(time_buffer, 26, "%Y-%m-%d_%H.%M.%S.log", tm_info);
 	
-	char log_file[BUFFER_SIZE];
 	sprintf(log_file, "log/%s", time_buffer);
   	FILE *fp = fopen(log_file, "w");
 
@@ -43,7 +43,7 @@ int logger(const char *format, ...){
 		logger("Initializing log.");
 	}
 	
-	FILE *fp = fopen(LOG_FILE_PATH, "a");
+	FILE *fp = fopen(log_file, "a");
 	
 	if (!fp)
 	{

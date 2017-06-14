@@ -2,11 +2,14 @@
 #include "ui/ui.h"
 
 UI::UI(){
-	
+	this->curPage = new TitlePage(this);
+	this->curPage->enter();
 }
 
 UI::~UI(){
-	this->curPage->exit();
+	if(this->curPage){
+		this->curPage->exit();
+	}
 }
 
 void UI::change_page(Page *newPage){
@@ -14,4 +17,8 @@ void UI::change_page(Page *newPage){
 	delete this->curPage;
 	this->curPage = newPage;
 	this->curPage->enter();
+}
+
+void UI::draw(){
+	this->curPage->draw();
 }
