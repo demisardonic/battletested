@@ -49,6 +49,8 @@ int main(int argc, char** argv){
 						fprintf(stderr, "Incorrect usage of --load.");
 						return 1;
 					}
+				}else if(!strcmp("--nolog", argv[i])){ //Seed argument
+					no_log();
 				}
 			}
 		}

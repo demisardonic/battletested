@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
 
 #include "logger.h"
 #include "util.h"
@@ -8,8 +9,19 @@ int has_init = 0;
 
 static int init_log(){
   	has_init = 1;
+	
+	char time_buffer[26];
+	time_t timer;
+    struct tm* tm_info;
 
-  	FILE *fp = fopen(LOG_FILE_PATH, "w");
+    time(&timer);
+    tm_info = localtime(&timer);
+
+    strftime(time_buffer, 26, "%Y-%m-%d_%H.%M.%S.log", tm_info);
+	
+	char log_file[BUFFER_SIZE];
+	sprintf(log_file, "log/%s", time_buffer);
+  	FILE *fp = fopen(log_file, "w");
 
   	if(!fp){
 		fprintf(stderr, "failed to create log file");
@@ -19,17 +31,14 @@ static int init_log(){
 	fclose(fp);
 	return 0;
 }
-#include <stdio.h>
-#include <stdarg.h>
-#include <time.h>
 
-#include "logger.h"
-#include "util.h"
-
+void no_log(){
+	has_init = -1;
+}
 
 int logger(const char *format, ...){
 
-	if(!has_init){
+	if(has_init == 0){
 		init_log();
 		logger("Initializing log.");
 	}
@@ -62,5 +71,3 @@ int logger(const char *format, ...){
 	fclose(fp);
 	return 0;
 }
-
-
