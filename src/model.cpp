@@ -44,12 +44,11 @@ Model::~Model(){
 		(*model->squad).pop_back();
 		delete temp;
 	}
-	delete model->squad;
+	delete this->squad;
 	int i;
 	for(i = model->num_pc_info - 1; i >= 0; i--){
 		delete model->pc_info[i];
 	}
 	delete [] model->pc_info;
 	free(this->map);
-	delete this->squad;
 }
