@@ -1,33 +1,33 @@
-FLAGS = -g -Wall -Werror
-LFLAGS = -lncurses
+CC := g++
+SRCDIR := src
+BUILDDIR := build
+TARGET := bin/battle
+ 
+SRCEXT := cpp
+SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
+OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
+CFLAGS := -g -Wall -Werror
+LIB := -lncurses
+INC := -I include
 
-BIN = battle
-OBJS = battle.o character.o logger.o model.o util.o ui.o
+$(TARGET): $(OBJECTS)
+	@echo " Linking..."
+	@echo " $(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
 
-all: mkdir $(BIN) none
+$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
+	@mkdir -p $(BUILDDIR)
+	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-$(BIN):$(OBJS)
-	@echo Linking $@
-	@g++ $(FLAGS) $(OBJS) -o bin/$(BIN) $(LFLAGS)
-
--include $(OBJS:.o=.d)
-
-%.o:%.c
-	@echo Compiling $<
-	@gcc $(FLAGS) -MMD -MF $*.d -c $<
-	
-%.o:%.cpp
-	@echo Compiling $<
-	@g++ $(FLAGS) -MMD -MF $*.d -c $<
-	
-mkdir:
-	@echo Making bin directory
-	@mkdir -p bin log
-	
 clean:
-	@echo Removing generated file
-	@rm -f *.o *.d *~ $(BIN) btlog
-	@rm -f -r bin log
+	@echo " Cleaning..."; 
+	@echo " $(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)
 
-none:
-	@echo Compilation Complete
+# Tests
+tester:
+	$(CC) $(CFLAGS) test/tester.cpp $(INC) $(LIB) -o bin/tester
+
+# Spikes
+ticket:
+	$(CC) $(CFLAGS) spikes/ticket.cpp $(INC) $(LIB) -o bin/ticket
+  
+.PHONY: clean

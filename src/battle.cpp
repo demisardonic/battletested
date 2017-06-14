@@ -1,3 +1,5 @@
+#include <vector>
+
 #include <ncurses.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -14,7 +16,7 @@
 
 int read_map_from_file(const char* path, uint8_t *map);
 int save_map_to_file(uint8_t *map, const char* path);
-character_info_t **read_characters_from_file(const char* path, int *num_char_len);
+Character_Info **read_characters_from_file(const char* path, int *num_char_len);
 
 int main(int argc, char** argv){
 	srand(time(NULL));
@@ -60,12 +62,12 @@ int main(int argc, char** argv){
 	
 	logger("Initializing model.");
 	//Initialize the model
-	model_t *model = init_model();
+	Model *model = new Model;
 	
 	//Load the players.btp file
 	int num_pc_info = 0;
 	logger("Reading player info.");
-	character_info_t **player_info = read_characters_from_file("players.btp", &num_pc_info);
+	Character_Info **player_info = read_characters_from_file("players.btp", &num_pc_info);
 	logger("Read %d players.", num_pc_info);
 	model->num_pc_info = num_pc_info;
 	model->pc_info = player_info;
@@ -86,10 +88,10 @@ int main(int argc, char** argv){
 	logger("Initializing pc array.");
 	//Create an array of player character pointers stored in the model
 	model->num_pcs = 0;
-	model->squad = (character_t **) malloc(sizeof(character_t *) * MAX_SQUAD_SIZE);
-	for(i = 0; i < MAX_SQUAD_SIZE; i++){
-		model->squad[i] = NULL;
-	}
+	//model->squad = (character_t **) malloc(sizeof(character_t *) * MAX_SQUAD_SIZE);
+	//for(i = 0; i < MAX_SQUAD_SIZE; i++){
+	//	model->squad[i] = NULL;
+	//}
 	
 	logger("Initializing ui.");
 	//Create the ui struct and store a read-only model pointer
@@ -137,7 +139,7 @@ int main(int argc, char** argv){
 				break;
 			case 'w':
 				if(ui->mode == MODE_GAME){
-					if(model->cur_pc != -1 && model->squad[model->cur_pc]->movement_map[yx_to_index(model->moveY-1, model->moveX)]){
+					if(model->cur_pc != -1 && (*model->squad)[model->cur_pc]->movement_map[yx_to_index(model->moveY-1, model->moveX)]){
 						model->moveY--;
 					}
 					invalid = 1;
@@ -151,7 +153,7 @@ int main(int argc, char** argv){
 				break;
 			case 's':
 				if(ui->mode == MODE_GAME){
-					if(model->cur_pc != -1 && model->squad[model->cur_pc]->movement_map[yx_to_index(model->moveY+1, model->moveX)]){
+					if(model->cur_pc != -1 && (*model->squad)[model->cur_pc]->movement_map[yx_to_index(model->moveY+1, model->moveX)]){
 						model->moveY++;
 					}
 					invalid = 1;
@@ -164,13 +166,13 @@ int main(int argc, char** argv){
 				}
 				break;
 			case 'a':
-				if(model->cur_pc != -1 && model->squad[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX-1)]){
+				if(model->cur_pc != -1 && (*model->squad)[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX-1)]){
 					model->moveX--;
 				}
 				invalid = 1;
 				break;
 			case 'd':
-				if(model->cur_pc != -1 && model->squad[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX+1)]){
+				if(model->cur_pc != -1 && (*model->squad)[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX+1)]){
 					model->moveX++;
 				}
 				invalid = 1;
@@ -178,9 +180,9 @@ int main(int argc, char** argv){
 			case ' ':
 				if(ui->mode == MODE_GAME){
 					if(model->cur_pc != -1){
-						pc_move(model->squad[model->cur_pc], model->moveY, model->moveX);
-						model->moveY = model->squad[model->cur_pc]->y;
-						model->moveX = model->squad[model->cur_pc]->x;
+						pc_move((*model->squad)[model->cur_pc], model->moveY, model->moveX);
+						model->moveY = (*model->squad)[model->cur_pc]->y;
+						model->moveX = (*model->squad)[model->cur_pc]->x;
 					}
 				} else if(ui->mode == MODE_SELECT_SQUAD){
 					if(model->pc_info[model->selection]->in_squad && model->num_pcs > 0){
@@ -196,24 +198,24 @@ int main(int argc, char** argv){
 				if(ui->mode == MODE_SELECT_SQUAD){
 					logger("Setting new Squad Selection.");
 					logger("Clearing current squad of size %d.", model->num_pcs);
-					for(i = 0; i < model->num_pcs; i++){
-						if(model->squad[i]){
-							model->char_loc[yx_to_index(model->squad[i]->y, model->squad[i]->x)] = NULL;
-							free_character(model->squad[i]);
-							model->squad[i] = NULL;
-						}
+					uint8_t i;
+					for(i = 0; i < (*model->squad).size(); i++){
+						model->char_loc[yx_to_index((*model->squad)[i]->y, (*model->squad)[i]->x)] = NULL;
+						Character *temp = (*model->squad).back();
+						model->squad->pop_back();
+						delete temp;
 					}
 					model->num_pcs = 0;
 					model->cur_pc = -1;
 					int count = 0;
 					for(i = 0; i < model->num_pc_info; i++){
 						if(model->pc_info[i]->in_squad){
-							model->squad[count] = init_character(model->pc_info[i]);
-							model->char_loc[yx_to_index(model->squad[count]->y, model->squad[count]->x)] = model->squad[count];
-							update_valid_moves(model->char_loc, model->map, model->squad[count]);
+							model->squad->push_back(new Character(model->pc_info[i]));
+							model->char_loc[yx_to_index((*model->squad)[count]->y, (*model->squad)[count]->x)] = (*model->squad)[count];
+							update_valid_moves(model->char_loc, model->map, (*model->squad)[count]);
 							model->cur_pc = count;
-							model->moveY = model->squad[model->cur_pc]->y;
-							model->moveX = model->squad[model->cur_pc]->x;
+							model->moveY = (*model->squad)[model->cur_pc]->y; 
+							model->moveX = (*model->squad)[model->cur_pc]->x;
 							model->num_pcs++;
 							count++;
 						}
@@ -242,12 +244,12 @@ int main(int argc, char** argv){
 			continue;
 		}
 		if(model->cur_pc != -1){
-			int turnless = 0;
-			while(model->squad[model->cur_pc]->turns <= 0){
+			uint8_t turnless = 0;
+			while((*model->squad)[model->cur_pc]->turns <= 0){
 				rotate_cur_pc();
 				turnless++;
 				//If all squad have no more moves, exit.
-				if(turnless >= model->num_pcs){
+				if(turnless >= (*model->squad).size()){
 					exit = 1;
 					break;
 				}
@@ -266,7 +268,8 @@ int main(int argc, char** argv){
 	logger("Freeing ui");
 	free_ui(ui);
 	logger("Freeing model");
-	free_model(model);
+	delete model;
+	
 	
 	logger("Exiting Sucessfully");
 	return 0;
@@ -339,7 +342,7 @@ int save_map_to_file(uint8_t *map, const char* path){
 }
 
 //Output a character_info array
-character_info_t **read_characters_from_file(const char* path, int *num_char_info){
+Character_Info **read_characters_from_file(const char* path, int *num_char_info){
 	FILE *input = fopen(path, "r");
 	if(!input){
 		fprintf(stderr, "File %s does not exist.\n", path);
@@ -370,12 +373,12 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_inf
 			fprintf(stderr, "No num_char_info.\n");
 			return NULL;
 		}
-		character_info_t **players = (character_info_t **) malloc(sizeof(character_info_t *) * (*num_char_info));
+		Character_Info **players = new Character_Info*[*num_char_info];
 		int i;
 		uint8_t buff8;
 		for(i = 0; i < *num_char_info; i++){
 			
-			players[i] = (character_info_t *) malloc(sizeof(character_info_t));
+			players[i] = new Character_Info;
 			
 			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
 				fprintf(stderr, "Failed to read Name buff8\n");
@@ -390,6 +393,7 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_inf
 			}
 			f_name[buff8] = '\0';
 			players[i]->f_name = f_name;
+			free(f_name);
 			
 			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
 				fprintf(stderr, "Failed to read Name buff8\n");
@@ -404,6 +408,7 @@ character_info_t **read_characters_from_file(const char* path, int *num_char_inf
 			}
 			l_name[buff8] = '\0';
 			players[i]->l_name = l_name;
+			free(l_name);
 			
 			int j;
 			for(j=0; j < 7; j++){
