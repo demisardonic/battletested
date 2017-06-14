@@ -17,6 +17,7 @@ $(TARGET): $(OBJECTS)
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
 	@echo "Compiling $<"
+	@touch $@
 	@$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
