@@ -16,15 +16,26 @@ class Page{
 		UI *parent;
 };
 
-class TitlePage : public Page{
+class AnyKeyPage : public Page{
+	public:
+		AnyKeyPage(UI *ui);
+		AnyKeyPage(UI *ui, Page *next);
+		virtual void draw() = 0;
+		void input();
+		virtual void enter() = 0;
+		void exit();
+		~AnyKeyPage(){};
+	private:
+		Page *nextPage;
+};
+
+class TitlePage : public AnyKeyPage{
 	public:
 		TitlePage(UI *ui);
 	
 		void draw();
-		void input();
 		void enter();
-		void exit();
-		~TitlePage();
+		~TitlePage(){};
 };
 
 #endif
