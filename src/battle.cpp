@@ -31,8 +31,6 @@ int main(int argc, char** argv){
 
 	//Read commandline arguments if they exist
 	if(argc > 1){
-		//strcpy(savePath, argv[1]);
-		//strcpy(loadPath, argv[1]);
 		for(i = 1; i < argc; i++){
 			if(argv[i][0] == '-'){
 				if(!strcmp("--load", argv[i]) || (strlen(argv[i]) == 2 && argv[i][1] == 'l')){ //Load argument
