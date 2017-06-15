@@ -28,6 +28,7 @@ void UI::input(){
 void UI::update(){
 	if(this->shouldChange){
 		internal_change_page();
+		this->shouldChange = false;
 	}
 }
 

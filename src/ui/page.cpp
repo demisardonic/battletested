@@ -39,3 +39,21 @@ void TitlePage::enter(){
 BlankPage::BlankPage(UI *ui):Page(ui){
 	
 }
+
+void BlankPage::draw(){
+	clear();
+}
+
+void BlankPage::input(){
+	getch();
+}
+
+ExitPage::ExitPage(UI *ui):BlankPage(ui){
+	
+}
+
+void ExitPage::input(){
+	if(getch() == 'q'){
+		parent->close();
+	}
+}

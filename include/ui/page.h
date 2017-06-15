@@ -42,11 +42,17 @@ class BlankPage : public Page{
 	public:
 		BlankPage(UI *ui);
 		
-		void draw(){};
-		void input(){};
+		void draw();
+		void input();
 		void enter(){};
 		void exit(){delete this;};
 		~BlankPage(){};
+};
+
+class ExitPage : public BlankPage{
+	public:
+		ExitPage(UI *ui);
+		void input();
 };
 
 #endif
