@@ -17,11 +17,11 @@ $(TARGET): $(OBJECTS)
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
 	@echo "Compiling $<"
-	@touch $@
+	@mkdir -p $(shell dirname "$@")
 	@$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
 	@echo Removing generated file
-	@$(RM) -r $(BUILDDIR) $(TARGET)
+	@$(RM) -rf $(BUILDDIR) $(TARGET)
   
 .PHONY: clean

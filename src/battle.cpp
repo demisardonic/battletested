@@ -12,6 +12,7 @@
 #include "logger.h"
 #include "model.h"
 #include "ui.h"
+#include "ui/ui.h"
 #include "util.h"
 
 int read_map_from_file(const char* path, uint8_t *map);
@@ -88,188 +89,27 @@ int main(int argc, char** argv){
 	logger("Initializing pc array.");
 	//Create an array of player character pointers stored in the model
 	model->num_pcs = 0;
-	//model->squad = (character_t **) malloc(sizeof(character_t *) * MAX_SQUAD_SIZE);
-	//for(i = 0; i < MAX_SQUAD_SIZE; i++){
-	//	model->squad[i] = NULL;
-	//}
 	
 	logger("Initializing ui.");
-	//Create the ui struct and store a read-only model pointer
-	ui_t *ui = init_ui(model);  
-	
-	logger("Initializing ncurses.");
-	//NCurses screen initialization
-	initscr();
-	start_color();
-	raw();
-	noecho();
-	curs_set(0);
-	keypad(stdscr, TRUE);
-	init_color_pairs();
-	
-	//Draw the loaded or blank screen
-	ui->draw();
-	refresh();
-
-	//invalid key means a new input can be parsed.
-	int invalid;
-	//Exit means input should no longer be read and program will close after key is handled
-	int exit;
+	UI *ui = new UI(model);
 	
 	while(1){
 		//Redraw the ui
+		//ui->draw();
+		//refresh();
 		ui->draw();
-		refresh();
-		
-		invalid = 0;
-		exit = 0;
-		
-		//Pull keyboard input
-		int key = getch();
-		
-		switch(key){
-			case 'i':
-				if(ui->mode == MODE_GAME){
-					logger("Switching to Squad Selection UI.");
-					ui->mode = MODE_SELECT_SQUAD;
-				} else {
-					logger("Switching to Game UI.");
-					ui->mode = MODE_GAME;
-				}
-				break;
-			case 'w':
-				if(ui->mode == MODE_GAME){
-					if(model->cur_pc != -1 && (*model->squad)[model->cur_pc]->movement_map[yx_to_index(model->moveY-1, model->moveX)]){
-						model->moveY--;
-					}
-					invalid = 1;
-				} else if(ui->mode == MODE_SELECT_SQUAD){
-					if(model->selection > 0){
-						model->selection--;
-					}else{
-						model->selection = model->num_pc_info-1;
-					}
-				}
-				break;
-			case 's':
-				if(ui->mode == MODE_GAME){
-					if(model->cur_pc != -1 && (*model->squad)[model->cur_pc]->movement_map[yx_to_index(model->moveY+1, model->moveX)]){
-						model->moveY++;
-					}
-					invalid = 1;
-				} else if(ui->mode == MODE_SELECT_SQUAD){
-					if(model->selection < model->num_pc_info-1){
-						model->selection++;
-					}else{
-						model->selection = 0;
-					}
-				}
-				break;
-			case 'a':
-				if(model->cur_pc != -1 && (*model->squad)[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX-1)]){
-					model->moveX--;
-				}
-				invalid = 1;
-				break;
-			case 'd':
-				if(model->cur_pc != -1 && (*model->squad)[model->cur_pc]->movement_map[yx_to_index(model->moveY, model->moveX+1)]){
-					model->moveX++;
-				}
-				invalid = 1;
-				break;
-			case ' ':
-				if(ui->mode == MODE_GAME){
-					if(model->cur_pc != -1){
-						pc_move((*model->squad)[model->cur_pc], model->moveY, model->moveX);
-						model->moveY = (*model->squad)[model->cur_pc]->y;
-						model->moveX = (*model->squad)[model->cur_pc]->x;
-					}
-				} else if(ui->mode == MODE_SELECT_SQUAD){
-					if(model->pc_info[model->selection]->in_squad && model->num_pcs > 0){
-						model->pc_info[model->selection]->in_squad = 0;
-						model->num_pcs--;
-					}else if(!model->pc_info[model->selection]->in_squad && model->num_pcs < MAX_SQUAD_SIZE){
-						model->pc_info[model->selection]->in_squad = 1;
-						model->num_pcs++;
-					}
-				}
-				break;
-			case '\n':
-				if(ui->mode == MODE_SELECT_SQUAD){
-					logger("Setting new Squad Selection.");
-					logger("Clearing current squad of size %d.", model->num_pcs);
-					uint8_t i;
-					for(i = 0; i < (*model->squad).size(); i++){
-						model->char_loc[yx_to_index((*model->squad)[i]->y, (*model->squad)[i]->x)] = NULL;
-						Character *temp = (*model->squad).back();
-						model->squad->pop_back();
-						delete temp;
-					}
-					model->num_pcs = 0;
-					model->cur_pc = -1;
-					int count = 0;
-					for(i = 0; i < model->num_pc_info; i++){
-						if(model->pc_info[i]->in_squad){
-							model->squad->push_back(new Character(model->pc_info[i]));
-							model->char_loc[yx_to_index((*model->squad)[count]->y, (*model->squad)[count]->x)] = (*model->squad)[count];
-							update_valid_moves(model->char_loc, model->map, (*model->squad)[count]);
-							model->cur_pc = count;
-							model->moveY = (*model->squad)[model->cur_pc]->y; 
-							model->moveX = (*model->squad)[model->cur_pc]->x;
-							model->num_pcs++;
-							count++;
-						}
-					}
-					ui->mode = MODE_GAME;
-				}
-				break;
-			case '\t':
-				if(model->cur_pc != -1){
-					rotate_cur_pc();
-				}
-				invalid = 1;
-				break;
-			case 'q':
-				//Quit program without saving
-				exit = 1;
-				break;
-			default:
-				//The key input was not a invalid key and thus a new key should be input.
-				invalid = 1;
-				break;
-		}
-		
-		//Read new input
-		if(invalid){
-			continue;
-		}
-		if(model->cur_pc != -1){
-			uint8_t turnless = 0;
-			while((*model->squad)[model->cur_pc]->turns <= 0){
-				rotate_cur_pc();
-				turnless++;
-				//If all squad have no more moves, exit.
-				if(turnless >= (*model->squad).size()){
-					exit = 1;
-					break;
-				}
-			}
-		}
-		
-		//break from input gathering while loop
-		if(exit){
+		ui->input();
+		ui->update();
+		if(ui->should_close()){
 			break;
 		}
+		
 	}
-
 	//delete ncurses window
-	endwin();
 	
-	logger("Freeing ui");
-	free_ui(ui);
-	logger("Freeing model");
+	
 	delete model;
-	
+	delete ui;
 	
 	logger("Exiting Sucessfully");
 	return 0;
