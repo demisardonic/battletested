@@ -64,7 +64,7 @@ int main(int argc, char** argv){
 	logger("Initializing model.");
 	//Initialize the model
 	Model *model = new Model;
-	UI *uiObj = new UI;
+	UI *uiObj = new UI(model);
 	
 	//Load the players.btp file
 	int num_pc_info = 0;
@@ -90,10 +90,6 @@ int main(int argc, char** argv){
 	logger("Initializing pc array.");
 	//Create an array of player character pointers stored in the model
 	model->num_pcs = 0;
-	//model->squad = (character_t **) malloc(sizeof(character_t *) * MAX_SQUAD_SIZE);
-	//for(i = 0; i < MAX_SQUAD_SIZE; i++){
-	//	model->squad[i] = NULL;
-	//}
 	
 	logger("Initializing ui.");
 	//Create the ui struct and store a read-only model pointer

@@ -52,6 +52,7 @@ class BlankPage : public Page{
 class ExitPage : public BlankPage{
 	public:
 		ExitPage(UI *ui);
+		void draw();
 		void input();
 };
 

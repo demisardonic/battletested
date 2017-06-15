@@ -1,7 +1,9 @@
+#include "model.h"
 #include "ui/page.h"
 #include "ui/ui.h"
 
-UI::UI(){
+UI::UI(Model* model){
+	this->model = model;
 	this->curPage = new TitlePage(this);
 	this->curPage->enter();
 	this->shouldClose = false;
