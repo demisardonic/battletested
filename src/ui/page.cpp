@@ -21,7 +21,7 @@ void AnyKeyPage::exit(){
 	delete this;
 }
 
-TitlePage::TitlePage(UI *ui):AnyKeyPage(ui, new ExitPage(ui)){
+TitlePage::TitlePage(UI *ui):AnyKeyPage(ui, new GamePage(ui)){
 	
 }
 
