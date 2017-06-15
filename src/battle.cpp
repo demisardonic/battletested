@@ -123,6 +123,11 @@ int main(int argc, char** argv){
 		//ui->draw();
 		//refresh();
 		uiObj->draw();
+		uiObj->input();
+		uiObj->update();
+		if(uiObj->should_close()){
+			break;
+		}
 		invalid = 0;
 		exit = 0;
 		

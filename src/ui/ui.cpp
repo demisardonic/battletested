@@ -4,21 +4,35 @@
 UI::UI(){
 	this->curPage = new TitlePage(this);
 	this->curPage->enter();
+	this->shouldClose = false;
+	this->shouldChange = false;
 }
 
 UI::~UI(){
-	if(this->curPage){
-		this->curPage->exit();
-	}
+	this->curPage->exit();
 }
 
 void UI::change_page(Page *newPage){
-	this->curPage->exit();
-	delete this->curPage;
-	this->curPage = newPage;
-	this->curPage->enter();
+	nextPage = newPage;
+	this->shouldChange = true;
 }
 
 void UI::draw(){
 	this->curPage->draw();
+}
+
+void UI::input(){
+	this->curPage->input();
+}
+
+void UI::update(){
+	if(this->shouldChange){
+		internal_change_page();
+	}
+}
+
+void UI::internal_change_page(){
+	this->curPage->exit();
+	this->curPage = nextPage;
+	this->curPage->enter();
 }
