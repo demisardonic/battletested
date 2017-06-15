@@ -10,7 +10,7 @@
 #include "ui/ui.h"
 
 SquadPage::SquadPage(UI *ui):Page(ui){
-	
+	selection = 0;
 }
 
 Model *SquadPage::model(){
@@ -34,8 +34,8 @@ void SquadPage::draw(){
 		}
 	}
 	
-	mvaddch(model()->selection+2, 2, '[');
-	mvaddch(model()->selection+2, GAME_WIDTH, ']');
+	mvaddch(selection+2, 2, '[');
+	mvaddch(selection+2, GAME_WIDTH, ']');
 	int j;
 	//Draw the boarder
 	for(i = 1; i < GAME_HEIGHT+1; i++){
@@ -57,27 +57,27 @@ void SquadPage::input(){
 		
 	switch(key){
 		case 'w':
-			if(model()->selection > 0){
-				model()->selection--;
+			if(selection > 0){
+				selection--;
 			}else{
-				model()->selection = model()->num_pc_info-1;
+				selection = model()->num_pc_info-1;
 			}
 			
 			break;
 		case 's':
-			if(model()->selection < model()->num_pc_info-1){
-				model()->selection++;
+			if(selection < model()->num_pc_info-1){
+				selection++;
 			}else{
-				model()->selection = 0;
+				selection = 0;
 			}
 			break;
 		
 		case ' ':
-			if(model()->pc_info[model()->selection]->in_squad && model()->num_pcs > 0){
-				model()->pc_info[model()->selection]->in_squad = 0;
+			if(model()->pc_info[selection]->in_squad && model()->num_pcs > 0){
+				model()->pc_info[selection]->in_squad = 0;
 				model()->num_pcs--;
-			}else if(!model()->pc_info[model()->selection]->in_squad && model()->num_pcs < MAX_SQUAD_SIZE){
-				model()->pc_info[model()->selection]->in_squad = 1;
+			}else if(!model()->pc_info[selection]->in_squad && model()->num_pcs < MAX_SQUAD_SIZE){
+				model()->pc_info[selection]->in_squad = 1;
 				model()->num_pcs++;
 			}
 			break;

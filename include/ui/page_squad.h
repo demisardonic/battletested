@@ -16,6 +16,9 @@ class SquadPage : public Page{
 		void exit();
 	private:
 		Model *model();
+		int selection;
 };
+
+int rotate_cur_pc();
 
 #endif

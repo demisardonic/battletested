@@ -23,7 +23,6 @@ class Model{
 		
 		int moveY;
 		int moveX;
-		int selection;
 		int cur_pc;
 		
 		Character *char_loc[GAME_HEIGHT * GAME_WIDTH];

@@ -29,7 +29,6 @@ Model::Model(){
 	this->cur_pc = -1;
 	this->moveY = -1;
 	this->moveX = -1;
-	this->selection = 0;
 	this->num_pcs = 0;
 	int i;
 	for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){

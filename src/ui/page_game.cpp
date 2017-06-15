@@ -12,7 +12,9 @@
 
 
 GamePage::GamePage(UI *ui):Page(ui){
-	
+	moveX = -1;
+	moveY = -1;
+	cur_pc = -1;
 }
 
 Model *GamePage::model(){
@@ -175,4 +177,11 @@ void GamePage::draw_boarder(){
 	mvaddch(0+1,GAME_WIDTH+1, ACS_URCORNER);
 	mvaddch(GAME_HEIGHT+1+1,0, ACS_LLCORNER);
 	mvaddch(GAME_HEIGHT+1+1,GAME_WIDTH+1, ACS_LRCORNER);
+}
+
+int GamePage::rotate_cur_pc(){
+	cur_pc = (cur_pc + 1) % (*model()->squad).size();
+	moveY = (*model()->squad)[cur_pc]->y;
+	moveX = (*model()->squad)[cur_pc]->x;
+	return cur_pc;
 }

@@ -41,33 +41,35 @@ int logger(const char *format, ...){
 	if(has_init == 0){
 		init_log();
 		logger("Initializing log.");
+	}else if(has_init > 0){
+		
+		FILE *fp = fopen(log_file, "a");
+		
+		if (!fp)
+		{
+			fprintf(stderr, "failed to open log file\n");
+			return 1;
+		}
+		char time_buffer[26];
+		char buffer[255];
+
+		va_list argv;
+		va_start(argv, format);
+		vsprintf(buffer, format, argv);
+		va_end(argv);
+		
+		time_t timer;
+		struct tm* tm_info;
+
+		time(&timer);
+		tm_info = localtime(&timer);
+
+		strftime(time_buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+		
+		fprintf(fp, "[%s] %s\n", time_buffer, buffer);
+
+		fclose(fp);
 	}
 	
-	FILE *fp = fopen(log_file, "a");
-	
-	if (!fp)
-	{
-		fprintf(stderr, "failed to open log file\n");
-		return 1;
-	}
-	char time_buffer[26];
-	char buffer[255];
-
-	va_list argv;
-	va_start(argv, format);
-	vsprintf(buffer, format, argv);
-	va_end(argv);
-	
-	time_t timer;
-    struct tm* tm_info;
-
-    time(&timer);
-    tm_info = localtime(&timer);
-
-    strftime(time_buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
-	
-	fprintf(fp, "[%s] %s\n", time_buffer, buffer);
-
-	fclose(fp);
 	return 0;
 }
