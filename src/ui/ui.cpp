@@ -14,7 +14,6 @@ UI::UI(Model* model){
 	this->shouldChange = false;
 	
 	logger("Initializing ncurses.");
-	//NCurses screen initialization
 	initscr();
 	start_color();
 	raw();

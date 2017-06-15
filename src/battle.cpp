@@ -11,7 +11,6 @@
 #include "character.h"
 #include "logger.h"
 #include "model.h"
-#include "ui.h"
 #include "ui/ui.h"
 #include "util.h"
 
@@ -62,7 +61,6 @@ int main(int argc, char** argv){
 	}
 	
 	logger("Initializing model.");
-	//Initialize the model
 	Model *model = new Model;
 	
 	//Load the players.btp file
@@ -72,7 +70,6 @@ int main(int argc, char** argv){
 	logger("Read %d players.", num_pc_info);
 	model->num_pc_info = num_pc_info;
 	model->pc_info = player_info;
-	
 	logger("Initializing map from \"%s\".", loadPath);
 	//Attempt to read the map file and store it within the model
 	uint8_t *map = (uint8_t *)malloc(GAME_HEIGHT * GAME_WIDTH);
@@ -85,18 +82,12 @@ int main(int argc, char** argv){
 			model->map[i] = 0;
 		}
 	}
-	
-	logger("Initializing pc array.");
-	//Create an array of player character pointers stored in the model
 	model->num_pcs = 0;
 	
 	logger("Initializing ui.");
 	UI *ui = new UI(model);
 	
 	while(1){
-		//Redraw the ui
-		//ui->draw();
-		//refresh();
 		ui->draw();
 		ui->input();
 		ui->update();
@@ -105,8 +96,6 @@ int main(int argc, char** argv){
 		}
 		
 	}
-	//delete ncurses window
-	
 	
 	delete model;
 	delete ui;
