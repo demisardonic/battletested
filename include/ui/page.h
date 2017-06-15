@@ -5,6 +5,8 @@ class UI;
 
 class Page{
 	public:
+		UI *parent;
+	
 		Page(UI *ui);
 	
 		virtual void draw() = 0;
@@ -12,8 +14,6 @@ class Page{
 		virtual void enter() = 0;
 		virtual void exit() = 0;
 		virtual ~Page(){};
-	private:
-		UI *parent;
 };
 
 class AnyKeyPage : public Page{
@@ -36,6 +36,17 @@ class TitlePage : public AnyKeyPage{
 		void draw();
 		void enter();
 		~TitlePage(){};
+};
+
+class BlankPage : public Page{
+	public:
+		BlankPage(UI *ui);
+		
+		void draw(){};
+		void input(){};
+		void enter(){};
+		void exit(){delete this;};
+		~BlankPage(){};
 };
 
 #endif
