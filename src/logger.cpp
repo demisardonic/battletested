@@ -5,20 +5,22 @@
 #include "logger.h"
 #include "util.h"
 
+#define TIME_BUFFER 26
+
 int has_init = 0;
 char log_file[BUFFER_SIZE];
 
 static int init_log(){
   	has_init = 1;
 	
-	char time_buffer[26];
+	char time_buffer[TIME_BUFFER];
 	time_t timer;
     struct tm* tm_info;
 
     time(&timer);
     tm_info = localtime(&timer);
 
-    strftime(time_buffer, 26, "%Y-%m-%d_%H.%M.%S.log", tm_info);
+    strftime(time_buffer, TIME_BUFFER, "%Y-%m-%d_%H.%M.%S.log", tm_info);
 	
 	sprintf(log_file, "log/%s", time_buffer);
   	FILE *fp = fopen(log_file, "w");
@@ -50,8 +52,8 @@ int logger(const char *format, ...){
 			fprintf(stderr, "failed to open log file\n");
 			return 1;
 		}
-		char time_buffer[26];
-		char buffer[255];
+		char time_buffer[TIME_BUFFER];
+		char buffer[BUFFER_SIZE];
 
 		va_list argv;
 		va_start(argv, format);
@@ -64,7 +66,7 @@ int logger(const char *format, ...){
 		time(&timer);
 		tm_info = localtime(&timer);
 
-		strftime(time_buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+		strftime(time_buffer, TIME_BUFFER, "%Y-%m-%d %H:%M:%S", tm_info);
 		
 		fprintf(fp, "[%s] %s\n", time_buffer, buffer);
 
