@@ -12,6 +12,7 @@ INC := -I include
 
 $(TARGET): $(OBJECTS)
 	@echo "Linking $(TARGET)"
+	@mkdir -p $(shell dirname "$(TARGET)")
 	@$(CC) $^ -o $(TARGET) $(LIB)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
