@@ -38,16 +38,16 @@ Model::Model(){
 }
 
 Model::~Model(){
-	while((*model->squad).size()>0){
-		Character *temp = (*model->squad).back();
-		(*model->squad).pop_back();
+	while((*this->squad).size()>0){
+		Character *temp = (*this->squad).back();
+		(*this->squad).pop_back();
 		delete temp;
 	}
 	delete this->squad;
 	int i;
-	for(i = model->num_pc_info - 1; i >= 0; i--){
-		delete model->pc_info[i];
+	for(i = this->num_pc_info - 1; i >= 0; i--){
+		delete this->pc_info[i];
 	}
-	delete [] model->pc_info;
+	delete [] this->pc_info;
 	free(this->map);
 }

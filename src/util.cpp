@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <stdint.h>
 
 #include "util.h"
 
@@ -42,4 +43,8 @@ int yx_to_index(int y, int x){
 void index_to_yx(int index, int *y, int *x){
 	*y = index/GAME_WIDTH;
 	*x = index%GAME_WIDTH;
+}
+
+bool in_range(uint32_t val, uint32_t min, uint32_t max){
+	return val >= min && val < max;
 }
