@@ -2,12 +2,13 @@ FLAGS = -g -Wall -Werror
 LFLAGS = -lncurses
 
 BIN = editor
-OBJS = mapedit.o model.o selection.o util.o ui.o 
+OBJS = mapedit.o model.o selection.o util.o ui.o
 
 all: $(BIN) none
 
 $(BIN):$(OBJS)
 	@echo Linking $@
+	@mkdir -p bin
 	@gcc $(FLAGS) $(OBJS) -o bin/$(BIN) $(LFLAGS)
 
 -include $(OBJS:.o=.d)
@@ -15,9 +16,10 @@ $(BIN):$(OBJS)
 %.o:%.c
 	@echo Compiling $<
 	@gcc $(FLAGS) -MMD -MF $*.d -c $<
-	
+
 pcedit: none
 	@echo Compiling pcedit
+	@mkdir -p bin
 	@gcc $(FLAGS) pcedit.c -o bin/pcedit $(LFLAGS)
 
 clean:
