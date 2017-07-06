@@ -1,3 +1,3 @@
 #!/bin/bash
 make
-valgrind --leak-check=full ./bin/battle
+valgrind --leak-check=full -v ./bin/battle

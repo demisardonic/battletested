@@ -85,27 +85,26 @@ void SquadPage::input(){
 			logger("Setting new Squad Selection.");
 			logger("Clearing current squad of size %d.", model()->num_pcs);
 			uint8_t i;
-			for(i = 0; i < (*model()->squad).size(); i++){
-				model()->char_loc[yx_to_index((*model()->squad)[i]->y, (*model()->squad)[i]->x)] = NULL;
+			while((*model()->squad).size()){
 				Character *temp = (*model()->squad).back();
+				model()->char_loc[yx_to_index(temp->y, temp->x)] = NULL;
 				model()->squad->pop_back();
 				delete temp;
 			}
 			model()->num_pcs = 0;
 			model()->cur_pc = -1;
-			int count = 0;
 			for(i = 0; i < model()->num_pc_info; i++){
 				if(model()->pc_info[i]->in_squad){
 					model()->squad->push_back(new Character(model()->pc_info[i]));
-					model()->char_loc[yx_to_index((*model()->squad)[count]->y, (*model()->squad)[count]->x)] = (*model()->squad)[count];
-					update_valid_moves(model()->char_loc, model()->map, (*model()->squad)[count]);
-					model()->cur_pc = count;
-					model()->moveY = (*model()->squad)[model()->cur_pc]->y;
-					model()->moveX = (*model()->squad)[model()->cur_pc]->x;
+					model()->char_loc[yx_to_index((*model()->squad)[model()->num_pcs]->y, (*model()->squad)[model()->num_pcs]->x)] = (*model()->squad)[model()->num_pcs];
+					update_valid_moves(model()->char_loc, model()->map, (*model()->squad)[model()->num_pcs]);
 					model()->num_pcs++;
-					count++;
 				}
 			}
+			logger("New squad has size %d.", (*model()->squad).size());
+			model()->cur_pc = model()->num_pcs - 1;
+			model()->moveY = (*model()->squad)[model()->cur_pc]->y;
+			model()->moveX = (*model()->squad)[model()->cur_pc]->x;
 			parent->change_page(new GamePage(parent));
 			break;
 

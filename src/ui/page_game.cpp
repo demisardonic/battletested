@@ -113,7 +113,11 @@ void GamePage::input(){
 }
 
 void GamePage::update(){
-
+	if(model()->cur_pc > -1){
+		if((*model()->squad)[model()->cur_pc]->turns < 1){
+			rotate_cur_pc();
+		}
+	}
 }
 
 void GamePage::enter(){
