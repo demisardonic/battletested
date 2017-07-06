@@ -2,3 +2,6 @@ bin/
 lib/
 build/
 log/
+
+*.btp
+*.btm
