@@ -1,6 +1,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <string>
+
 #define GAME_WIDTH 78
 #define GAME_HEIGHT 19
 #define TOP_BAR 0
@@ -32,5 +34,6 @@ int is_alphanumeric_char(char);
 int is_path_char(char);
 int yx_to_index(int y, int x);
 void index_to_yx(int index, int *y, int *x);
+std::string trim(const std::string str);
 
 #endif

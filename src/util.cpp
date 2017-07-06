@@ -1,3 +1,5 @@
+#include <string>
+
 #include <ncurses.h>
 
 #include "util.h"
@@ -42,4 +44,13 @@ int yx_to_index(int y, int x){
 void index_to_yx(int index, int *y, int *x){
 	*y = index/GAME_WIDTH;
 	*x = index%GAME_WIDTH;
+}
+
+std::string trim(const std::string str){
+	size_t first = str.find_first_not_of(' ');
+  if (std::string::npos == first){
+      return str;
+  }
+  size_t last = str.find_last_not_of(' ');
+  return str.substr(first, (last - first + 1));
 }
