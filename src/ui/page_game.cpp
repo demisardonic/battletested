@@ -12,9 +12,6 @@
 
 
 GamePage::GamePage(UI *ui):Page(ui){
-	moveX = -1;
-	moveY = -1;
-	cur_pc = -1;
 }
 
 Model *GamePage::model(){
@@ -23,20 +20,20 @@ Model *GamePage::model(){
 
 void GamePage::draw(){
 	int i, j;
-	
+
 	attron(COLOR_PAIR(COLOR_DEFAULT));
-	
+
 	draw_boarder();
-	
+
 	//Draw the map
 	for(i = 0; i < GAME_HEIGHT; i++){
 		for (j = 0; j < GAME_WIDTH; j++){
 			draw_char(i,j,model()->map[i*GAME_WIDTH+j]);
 		}
 	}
-	
+
 	attroff(COLOR_PAIR(COLOR_DEFAULT));
-	
+
 	if(model()->cur_pc != -1){
 		//Draw the current selected pc move area
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
@@ -48,10 +45,10 @@ void GamePage::draw(){
 				}
 			}
 		}
-		
+
 		//Draw the current selected tile
 		draw_char_color(model()->moveY, model()->moveX, model()->map[model()->moveY * GAME_WIDTH + model()->moveX], COLOR_PC);
-		
+
 		//Draw all of the characters
 		for(i = 0; i < GAME_HEIGHT * GAME_WIDTH; i++){
 			Character *ch = model()->char_loc[i];
@@ -59,10 +56,10 @@ void GamePage::draw(){
 				draw_char_color(ch->y, ch->x, ch->c, COLOR_DEFAULT);
 			}
 		}
-		
+
 		//Draw the currently selected player
 		draw_char_color((*model()->squad)[model()->cur_pc]->y, (*model()->squad)[model()->cur_pc]->x, (*model()->squad)[model()->cur_pc]->c, COLOR_PC);
-		
+
 		//Draw the selected player's info
 		draw_cur_pc_info((*model()->squad)[model()->cur_pc]);
 	}
@@ -70,7 +67,7 @@ void GamePage::draw(){
 
 void GamePage::input(){
 	int key = getch();
-		
+
 	switch(key){
 		case 'i':
 			logger("Switching to Squad Selection UI.");
@@ -111,7 +108,7 @@ void GamePage::input(){
 		case 'q':
 			parent->change_page(new ExitPage(parent));
 			break;
-		
+
 	}
 }
 
@@ -132,7 +129,7 @@ void GamePage::draw_char(int y, int x, uint8_t val){
 	}else if(val == 2){
 		addch(FULL_COVER);
 	}else{
-		addch(val);	
+		addch(val);
 	}
 }
 
@@ -146,7 +143,7 @@ void GamePage::draw_char_color(int y, int x, uint8_t val, int color){
 	}else if(val == 2){
 		addch(FULL_COVER);
 	}else{
-		addch(val);	
+		addch(val);
 	}
 	attroff(COLOR_PAIR(color));
 }
@@ -154,7 +151,7 @@ void GamePage::draw_char_color(int y, int x, uint8_t val, int color){
 void GamePage::draw_cur_pc_info(Character *pc){
 	mvprintw(BOTTOM_BAR_1, 0, LINE_CLEAR);
 	mvprintw(BOTTOM_BAR_1, 0, "Name:%s %s X:%d Y:%d", pc->info->f_name.c_str(), pc->info->l_name.c_str(), pc->x, pc->y);
-	
+
 	move(BOTTOM_BAR_2, 0);
 	int i;
 	for(i = 0; i < 7; i++){
@@ -180,8 +177,8 @@ void GamePage::draw_boarder(){
 }
 
 int GamePage::rotate_cur_pc(){
-	cur_pc = (cur_pc + 1) % (*model()->squad).size();
-	moveY = (*model()->squad)[cur_pc]->y;
-	moveX = (*model()->squad)[cur_pc]->x;
-	return cur_pc;
+	model()->cur_pc = (model()->cur_pc + 1) % (*model()->squad).size();
+	model()->moveY = (*model()->squad)[model()->cur_pc]->y;
+	model()->moveX = (*model()->squad)[model()->cur_pc]->x;
+	return model()->cur_pc;
 }

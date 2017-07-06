@@ -1,3 +1,5 @@
+#include <string>
+
 #include <ncurses.h>
 
 #include "logger.h"
@@ -12,7 +14,7 @@ UI::UI(Model* model){
 	this->curPage->enter();
 	this->shouldClose = false;
 	this->shouldChange = false;
-	
+
 	logger("Initializing ncurses.");
 	initscr();
 	start_color();

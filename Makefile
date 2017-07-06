@@ -2,7 +2,7 @@ CC := g++
 SRCDIR := src
 BUILDDIR := build
 TARGET := bin/battle
- 
+
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
@@ -14,6 +14,7 @@ $(TARGET): $(OBJECTS)
 	@echo "Linking $(TARGET)"
 	@mkdir -p $(shell dirname "$(TARGET)")
 	@$(CC) $^ -o $(TARGET) $(LIB)
+	@mkdir -p log
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
@@ -24,5 +25,5 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 clean:
 	@echo Removing generated file
 	@$(RM) -rf $(BUILDDIR) $(TARGET)
-  
+
 .PHONY: clean
