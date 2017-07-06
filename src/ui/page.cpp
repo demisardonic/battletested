@@ -21,8 +21,12 @@ void AnyKeyPage::exit(){
 	delete this;
 }
 
+void AnyKeyPage::update(){
+
+}
+
 TitlePage::TitlePage(UI *ui):AnyKeyPage(ui, new GamePage(ui)){
-	
+
 }
 
 void TitlePage::draw(){
@@ -38,7 +42,7 @@ void TitlePage::enter(){
 }
 
 BlankPage::BlankPage(UI *ui):Page(ui){
-	
+
 }
 
 void BlankPage::draw(){
@@ -47,4 +51,8 @@ void BlankPage::draw(){
 
 void BlankPage::input(){
 	getch();
+}
+
+void BlankPage::update(){
+	
 }

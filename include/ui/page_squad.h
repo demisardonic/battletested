@@ -12,6 +12,7 @@ class SquadPage : public Page{
 		SquadPage(UI *ui);
 		void draw();
 		void input();
+		void update();
 		void enter();
 		void exit();
 	private:

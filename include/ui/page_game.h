@@ -12,6 +12,7 @@ class GamePage : public Page{
 		GamePage(UI *ui);
 		void draw();
 		void input();
+		void update();
 		void enter();
 		void exit();
 		int rotate_cur_pc();

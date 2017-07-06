@@ -33,7 +33,7 @@ void SquadPage::draw(){
 			}
 		}
 	}
-	
+
 	mvaddch(selection+2, 2, '[');
 	mvaddch(selection+2, GAME_WIDTH, ']');
 	int j;
@@ -54,7 +54,7 @@ void SquadPage::draw(){
 
 void SquadPage::input(){
 	int key = getch();
-		
+
 	switch(key){
 		case 'w':
 			if(selection > 0){
@@ -62,7 +62,7 @@ void SquadPage::input(){
 			}else{
 				selection = model()->num_pc_info-1;
 			}
-			
+
 			break;
 		case 's':
 			if(selection < model()->num_pc_info-1){
@@ -71,7 +71,7 @@ void SquadPage::input(){
 				selection = 0;
 			}
 			break;
-		
+
 		case ' ':
 			if(model()->pc_info[selection]->in_squad && model()->num_pcs > 0){
 				model()->pc_info[selection]->in_squad = 0;
@@ -100,7 +100,7 @@ void SquadPage::input(){
 					model()->char_loc[yx_to_index((*model()->squad)[count]->y, (*model()->squad)[count]->x)] = (*model()->squad)[count];
 					update_valid_moves(model()->char_loc, model()->map, (*model()->squad)[count]);
 					model()->cur_pc = count;
-					model()->moveY = (*model()->squad)[model()->cur_pc]->y; 
+					model()->moveY = (*model()->squad)[model()->cur_pc]->y;
 					model()->moveX = (*model()->squad)[model()->cur_pc]->x;
 					model()->num_pcs++;
 					count++;
@@ -108,8 +108,12 @@ void SquadPage::input(){
 			}
 			parent->change_page(new GamePage(parent));
 			break;
-		
+
 	}
+}
+
+void SquadPage::update(){
+
 }
 
 void SquadPage::enter(){

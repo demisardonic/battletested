@@ -45,6 +45,7 @@ void UI::input(){
 }
 
 void UI::update(){
+	this->curPage->update();
 	if(this->shouldChange){
 		internal_change_page();
 		this->shouldChange = false;

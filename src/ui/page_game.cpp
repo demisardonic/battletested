@@ -112,6 +112,10 @@ void GamePage::input(){
 	}
 }
 
+void GamePage::update(){
+
+}
+
 void GamePage::enter(){
 	clear();
 }
