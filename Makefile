@@ -6,7 +6,7 @@ TARGET := bin/battle
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-CFLAGS := -g -Wall -Werror
+CFLAGS := -g -Wall -Werror -std=c++11
 LIB := -lncurses
 INC := -I include
 
