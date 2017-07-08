@@ -12,7 +12,7 @@ char log_file[BUFFER_SIZE];
 
 static int init_log(){
   	has_init = 1;
-	
+
 	char time_buffer[TIME_BUFFER];
 	time_t timer;
     struct tm* tm_info;
@@ -21,7 +21,7 @@ static int init_log(){
     tm_info = localtime(&timer);
 
     strftime(time_buffer, TIME_BUFFER, "%Y-%m-%d_%H.%M.%S.log", tm_info);
-	
+
 	sprintf(log_file, "log/%s", time_buffer);
   	FILE *fp = fopen(log_file, "w");
 
@@ -43,10 +43,12 @@ int logger(const char *format, ...){
 	if(has_init == 0){
 		init_log();
 		logger("Initializing log.");
-	}else if(has_init > 0){
-		
+	}
+
+  if(has_init > -1){
+
 		FILE *fp = fopen(log_file, "a");
-		
+
 		if (!fp)
 		{
 			fprintf(stderr, "failed to open log file\n");
@@ -59,7 +61,7 @@ int logger(const char *format, ...){
 		va_start(argv, format);
 		vsprintf(buffer, format, argv);
 		va_end(argv);
-		
+
 		time_t timer;
 		struct tm* tm_info;
 
@@ -67,11 +69,11 @@ int logger(const char *format, ...){
 		tm_info = localtime(&timer);
 
 		strftime(time_buffer, TIME_BUFFER, "%Y-%m-%d %H:%M:%S", tm_info);
-		
+
 		fprintf(fp, "[%s] %s\n", time_buffer, buffer);
 
 		fclose(fp);
 	}
-	
+
 	return 0;
 }
