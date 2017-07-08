@@ -1,4 +1,7 @@
+#include <algorithm>
+#include <iostream>
 #include <string>
+
 
 #include <ncurses.h>
 
@@ -46,11 +49,11 @@ void index_to_yx(int index, int *y, int *x){
 	*x = index%GAME_WIDTH;
 }
 
-std::string trim(const std::string str){
-	size_t first = str.find_first_not_of(' ');
-  if (std::string::npos == first){
-      return str;
-  }
-  size_t last = str.find_last_not_of(' ');
-  return str.substr(first, (last - first + 1));
+void trim(std::string &str){
+	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int ch){
+		return !std::isspace(ch);
+	}));
+	str.erase(std::find_if(str.rbegin(), str.rend(), [](int ch){
+		return !std::isspace(ch);
+	}).base(), str.end());
 }

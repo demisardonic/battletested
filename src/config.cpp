@@ -11,9 +11,6 @@ Config::Config(const char* path){
 
   std::ifstream file(path);
   std::string buff;
-
-  std::string trueString("true");
-  std::string falseString("false");
   while(std::getline(file, buff)){
     std::istringstream line(buff);
     std::string key;
@@ -21,17 +18,21 @@ Config::Config(const char* path){
     if (std::getline(line, key, '=')) {
       std::string val;
       if(std::getline(line, val)){
-        std::string newVal = trim(val);
+        trim(val);
         try{
           int i = std::stoi(val);
           integers[key] = i;
+          logger("Read int %s : %d", key.c_str(), i);
         }catch(...){
-          if(val == trueString){
+          if(val == "true"){
             booleans[key] = true;
-          }else if(val == falseString){
+            logger("Read boolean %s : true", key.c_str());
+          }else if(val == "false"){
             booleans[key] = false;
+            logger("Read boolean %s : false", key.c_str());
           }else{
             strings[key] = val;
+            logger("Read string %s : %s", key.c_str(), val.c_str());
           }
         }
       }

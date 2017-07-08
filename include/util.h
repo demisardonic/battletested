@@ -34,6 +34,6 @@ int is_alphanumeric_char(char);
 int is_path_char(char);
 int yx_to_index(int y, int x);
 void index_to_yx(int index, int *y, int *x);
-std::string trim(const std::string str);
+void trim(std::string &str);
 
 #endif
