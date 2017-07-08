@@ -6,10 +6,11 @@
 #include "logger.h"
 #include "util.h"
 
-Config::Config(const char* path){
-  this->location = path;
+Config::Config(){
+  this->location = "battle.cfg";
 
-  std::ifstream file(path);
+  logger("Initializing config %s", this->location.c_str());
+  std::ifstream file(this->location);
   std::string buff;
   while(std::getline(file, buff)){
     std::istringstream line(buff);
@@ -22,17 +23,13 @@ Config::Config(const char* path){
         try{
           int i = std::stoi(val);
           integers[key] = i;
-          logger("Read int %s : %d", key.c_str(), i);
         }catch(...){
           if(val == "true"){
             booleans[key] = true;
-            logger("Read boolean %s : true", key.c_str());
           }else if(val == "false"){
             booleans[key] = false;
-            logger("Read boolean %s : false", key.c_str());
           }else{
             strings[key] = val;
-            logger("Read string %s : %s", key.c_str(), val.c_str());
           }
         }
       }

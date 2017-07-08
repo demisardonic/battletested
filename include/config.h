@@ -11,10 +11,15 @@ private:
   std::unordered_map<std::string, std::string> strings;
   std::unordered_map<std::string, bool> booleans;
 
-public:
-  Config () : Config("battle.cfg"){}
-  Config (const char* path);
+  Config ();
   ~Config ();
+
+
+public:
+  static Config& getInstance(){
+    static Config config;
+    return config;
+  }
 
   int get_int(std::string name);
   std::string get_string(std::string name);
