@@ -5,6 +5,9 @@ MAP
 Version 1
 7-1488	TileID
 
+Version 2
+
+
 
 PLAYERS
 0-5	btlplr

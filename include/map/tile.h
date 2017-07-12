@@ -11,6 +11,8 @@ public:
   Tile ();
   Tile (uint8_t val);
   virtual ~Tile ();
+
+  inline uint8_t getVal(){return val;};
 };
 
 #endif

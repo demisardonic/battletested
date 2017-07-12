@@ -9,10 +9,7 @@ Map::Map(){
   this->height = GAME_HEIGHT;
   this->floors = 1;
   this->hasLoaded = true;
-  this->mapData = new Tile*[this->width * this->height * this->floors];
-  for (size_t i = 0; i < this->getSize(); i++) {
-    this->mapData[i] = new Tile;
-  }
+  this->mapData = new Tile[this->width * this->height * this->floors];
 }
 
 Map::Map(std::string path){
@@ -21,9 +18,6 @@ Map::Map(std::string path){
 
 Map::~Map(){
   if(this->hasLoaded){
-    for (size_t i = 0; i < this->getSize(); i++) {
-      delete this->mapData[i];
-    }
     delete [] this->mapData;
   }
 }
@@ -32,19 +26,40 @@ uint32_t Map::getTileIndex(uint16_t x, uint16_t y, uint8_t z){
   return (z * getWidth() * getHeight()) + (y * getWidth()) + x;
 }
 
-Tile *Map::getTile(uint16_t x, uint16_t y, uint16_t z){
+Tile Map::getTile(uint16_t x, uint16_t y, uint16_t z){
   if(this->hasLoaded){
     uint32_t index = getTileIndex(x, y, z);
     if(index < this->getSize()){
       return this->mapData[index];
     }
   }
-  return NULL;
+  return Tile(0);
 }
 
-void Map::setTile(Tile *tile, uint16_t x, uint16_t y, uint16_t z){
+void Map::setTile(Tile tile, uint16_t x, uint16_t y, uint16_t z){
   if(this->hasLoaded){
       uint32_t index = getTileIndex(x, y, z);
-      this->mapData[index] = tile;
+      this->mapData[index] = Tile(tile.getVal());
   }
+}
+
+Map::MapBuilder::MapBuilder(){
+  this->map = new Map();
+}
+
+Map::MapBuilder& Map::MapBuilder::setSize(uint32_t size){
+  map->size = size;
+  map->width = 0xfff & size;
+  map->height = 0xfff & (size>>12);
+  map->floors = 0xff & (size>>24);
+  return *this;
+}
+
+Map::MapBuilder& Map::MapBuilder::setMapData(Tile *mapData){
+  map->mapData = mapData;
+  return *this;
+}
+
+Map* Map::MapBuilder::build(){
+  return map;
 }
