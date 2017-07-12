@@ -5,11 +5,7 @@
 #include "util.h"
 
 Map::Map(){
-  this->width = GAME_WIDTH;
-  this->height = GAME_HEIGHT;
-  this->floors = 1;
-  this->hasLoaded = true;
-  this->mapData = new Tile[this->width * this->height * this->floors];
+  this->hasLoaded = false;
 }
 
 Map::Map(std::string path){
@@ -61,5 +57,6 @@ Map::MapBuilder& Map::MapBuilder::setMapData(Tile *mapData){
 }
 
 Map* Map::MapBuilder::build(){
+  map->hasLoaded = true;
   return map;
 }

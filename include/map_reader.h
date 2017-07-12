@@ -4,6 +4,6 @@
 #include <string>
 #include "map/map.h"
 
-int read_map_file(const std::string path, Map &map);
+Map* read_map_file(const std::string &path);
 
 #endif

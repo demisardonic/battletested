@@ -10,6 +10,7 @@
 
 #include "character.h"
 #include "logger.h"
+#include "map_reader.h"
 #include "model.h"
 #include "ui/ui.h"
 #include "util.h"
@@ -21,12 +22,11 @@ Character_Info **read_characters_from_file(const char* path, int *num_char_len);
 int main(int argc, char** argv){
 	srand(time(NULL));
 	int i;
-	
+
 	//character arrays to store load and save paths.
 	//"strings" initially set to "\0".
 	char loadPath[BUFFER_SIZE];
 	memset(loadPath, 0, BUFFER_SIZE);
-	
 	uint32_t seed = 0;
 
 	//Read commandline arguments if they exist
@@ -53,16 +53,18 @@ int main(int argc, char** argv){
 			}
 		}
 	}
-	
+
 	if(seed){
 		srand(seed);
 	}else{
 		srand(time(NULL));
 	}
-	
+
+	read_map_file("../players.btp");
+
 	logger("Initializing model.");
 	Model *model = new Model;
-	
+
 	//Load the players.btp file
 	int num_pc_info = 0;
 	logger("Reading player info.");
@@ -83,10 +85,10 @@ int main(int argc, char** argv){
 		}
 	}
 	model->num_pcs = 0;
-	
+
 	logger("Initializing ui.");
 	UI *ui = new UI(model);
-	
+
 	while(1){
 		ui->draw();
 		ui->input();
@@ -94,12 +96,12 @@ int main(int argc, char** argv){
 		if(ui->should_close()){
 			break;
 		}
-		
+
 	}
-	
+
 	delete model;
 	delete ui;
-	
+
 	logger("Exiting Sucessfully");
 	return 0;
 }
@@ -110,7 +112,7 @@ int read_map_from_file(const char* path, uint8_t *map){
 	if(!path[0]){
 		return 1;
 	}
-	
+
 	FILE *input = fopen(path, "r");
 	if(!input){
 		fprintf(stderr, "File %s does not exist.\n", path);
@@ -134,7 +136,7 @@ int read_map_from_file(const char* path, uint8_t *map){
 		fprintf(stderr, "Ininvalid file.\n");
 		return 1;
 	}
-	
+
 	if(version == 1){
 		uint8_t tempMap[GAME_HEIGHT * GAME_WIDTH];
 		int i;
@@ -164,7 +166,7 @@ int save_map_to_file(uint8_t *map, const char* path){
 
 	uint8_t ver = VERSION;
 	fwrite(&ver, 1, 1, outfile);
-	
+
 	fwrite(map, sizeof(*map), GAME_WIDTH * GAME_HEIGHT, outfile);
 	fclose(outfile);
 	return 0;
@@ -195,9 +197,9 @@ Character_Info **read_characters_from_file(const char* path, int *num_char_info)
 		fprintf(stderr, "Ininvalid file.\n");
 		return NULL;
 	}
-	
+
 	if(version == 1){
-		
+
 		if(!fread(num_char_info, sizeof(uint8_t), 1, input)){
 			fprintf(stderr, "No num_char_info.\n");
 			return NULL;
@@ -206,16 +208,16 @@ Character_Info **read_characters_from_file(const char* path, int *num_char_info)
 		int i;
 		uint8_t buff8;
 		for(i = 0; i < *num_char_info; i++){
-			
+
 			players[i] = new Character_Info;
-			
+
 			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
 				fprintf(stderr, "Failed to read Name buff8\n");
 				return NULL;
 			}
-			
+
 			char *f_name = (char *) malloc(sizeof(char) * (buff8 + 1));
-			
+
 			if(!fread(f_name, sizeof(char), buff8, input)){
 				fprintf(stderr, "Failed to read Name buff8\n");
 				return NULL;
@@ -223,14 +225,14 @@ Character_Info **read_characters_from_file(const char* path, int *num_char_info)
 			f_name[buff8] = '\0';
 			players[i]->f_name = f_name;
 			free(f_name);
-			
+
 			if(!fread(&buff8, sizeof(uint8_t), 1, input)){
 				fprintf(stderr, "Failed to read Name buff8\n");
 				return NULL;
 			}
-			
+
 			char *l_name = (char *) malloc(sizeof(char) * (buff8 + 1));
-			
+
 			if(!fread(l_name, sizeof(char), buff8, input)){
 				fprintf(stderr, "Failed to read Name buff8\n");
 				return NULL;
@@ -238,7 +240,7 @@ Character_Info **read_characters_from_file(const char* path, int *num_char_info)
 			l_name[buff8] = '\0';
 			players[i]->l_name = l_name;
 			free(l_name);
-			
+
 			int j;
 			for(j=0; j < 7; j++){
 				if(!fread(&buff8, sizeof(uint8_t), 1, input)){
@@ -247,8 +249,8 @@ Character_Info **read_characters_from_file(const char* path, int *num_char_info)
 				}
 				players[i]->stats[j] = buff8;
 			}
-			
-			
+
+
 			players[i]->in_squad = 0;
 		}
 		return players;

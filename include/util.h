@@ -33,6 +33,11 @@ void init_color_pairs();
 int is_alphanumeric_char(char);
 int is_path_char(char);
 int yx_to_index(int y, int x);
+
+size_t size_to_width(uint32_t size);
+size_t size_to_height(uint32_t size);
+size_t size_to_floors(uint32_t size);
+
 void index_to_yx(int index, int *y, int *x);
 
 bool in_range(uint32_t val, uint32_t min, uint32_t max);

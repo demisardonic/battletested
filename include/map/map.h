@@ -15,15 +15,14 @@ private:
   uint8_t floors;
   bool hasLoaded;
   Tile *mapData;
+  
+  Map ();
+  Map (std::string path);
 
   friend class MapBuilder;
 
 public:
 
-  static Map generateMap();
-
-  Map ();
-  Map (std::string path);
   virtual ~Map ();
 
   inline size_t getSize(){ return getWidth() * getHeight() * getFloors(); };

@@ -1,0 +1,11 @@
+[2017-07-11 20:36:07] Initializing log.
+[2017-07-11 20:36:07] Reading size 1886155874
+[2017-07-11 20:36:07] Initializing model.
+[2017-07-11 20:36:07] Reading player info.
+[2017-07-11 20:36:07] Read 3 players.
+[2017-07-11 20:36:07] Initializing map from "".
+[2017-07-11 20:36:07] Failed to read map generating blank map.
+[2017-07-11 20:36:07] Initializing ui.
+[2017-07-11 20:36:07] Initializing ncurses.
+[2017-07-11 20:36:08] Terminating ncurses.
+[2017-07-11 20:36:08] Exiting Sucessfully

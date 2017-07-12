@@ -45,6 +45,18 @@ void index_to_yx(int index, int *y, int *x){
 	*x = index%GAME_WIDTH;
 }
 
+size_t size_to_width(uint32_t size){
+	return 0xfff & size;
+}
+
+size_t size_to_height(uint32_t size){
+	 return 0xfff & (size>>12);
+}
+
+size_t size_to_floors(uint32_t size){
+	return 0xff & (size>>24);
+}
+
 bool in_range(uint32_t val, uint32_t min, uint32_t max){
 	return val >= min && val < max;
 }
