@@ -5,3 +5,6 @@ log/
 
 *.btp
 *.btm
+
+*.d
+*.o
